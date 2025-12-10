@@ -1,14 +1,16 @@
 import { useState } from "react";
-import { TravelRecapData, TravelDestination, UserProfile } from "./types";
+import { TravelRecapData, TravelDestination, TravelImage, UserProfile } from "./types";
 import WelcomeScreen from "./WelcomeScreen";
 import ProfileSetup from "./ProfileSetup";
-import DestinationSelector from "./DestinationSelector";
+import ImageUploader from "./ImageUploader";
+import LocationTagger from "./LocationTagger";
 import RecapStory from "./RecapStory";
 
-type Step = 'welcome' | 'profile' | 'destinations' | 'story';
+type Step = 'welcome' | 'profile' | 'upload' | 'tag' | 'story';
 
 export default function TravelRecapApp() {
   const [step, setStep] = useState<Step>('welcome');
+  const [images, setImages] = useState<TravelImage[]>([]);
   const [recapData, setRecapData] = useState<TravelRecapData>({
     profile: { username: '', platform: 'none' },
     destinations: [],
@@ -17,10 +19,15 @@ export default function TravelRecapApp() {
 
   const handleProfileComplete = (profile: UserProfile) => {
     setRecapData(prev => ({ ...prev, profile }));
-    setStep('destinations');
+    setStep('upload');
   };
 
-  const handleDestinationsComplete = (destinations: TravelDestination[]) => {
+  const handleImagesUploaded = (uploadedImages: TravelImage[]) => {
+    setImages(uploadedImages);
+    setStep('tag');
+  };
+
+  const handleTaggingComplete = (destinations: TravelDestination[]) => {
     setRecapData(prev => ({ ...prev, destinations }));
     setStep('story');
   };
@@ -31,6 +38,7 @@ export default function TravelRecapApp() {
       destinations: [],
       year: 2025
     });
+    setImages([]);
     setStep('welcome');
   };
 
@@ -46,17 +54,24 @@ export default function TravelRecapApp() {
           initialProfile={recapData.profile}
         />
       )}
-      {step === 'destinations' && (
-        <DestinationSelector
-          onNext={handleDestinationsComplete}
+      {step === 'upload' && (
+        <ImageUploader
+          onNext={handleImagesUploaded}
           onBack={() => setStep('profile')}
-          initialDestinations={recapData.destinations}
+          initialImages={images}
+        />
+      )}
+      {step === 'tag' && (
+        <LocationTagger
+          images={images}
+          onComplete={handleTaggingComplete}
+          onBack={() => setStep('upload')}
         />
       )}
       {step === 'story' && (
         <RecapStory
           data={recapData}
-          onBack={() => setStep('destinations')}
+          onBack={() => setStep('upload')}
           onRestart={handleRestart}
         />
       )}
