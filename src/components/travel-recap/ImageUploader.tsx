@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { TravelImage } from "./types";
-import { ArrowLeft, ArrowRight, Plus, X, Upload, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, Plus, X, Upload, Image as ImageIcon, Loader2 } from "lucide-react";
 import exifr from "exifr";
 
 interface ImageUploaderProps {
@@ -12,6 +12,7 @@ interface ImageUploaderProps {
 
 export default function ImageUploader({ onNext, onBack, initialImages }: ImageUploaderProps) {
   const [images, setImages] = useState<TravelImage[]>(initialImages || []);
+  const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const extractGeoTag = async (file: File): Promise<TravelImage['geoTag'] | undefined> => {
@@ -61,25 +62,55 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
   };
 
   const handleFilesSelected = useCallback(async (files: FileList) => {
-    const newImages: TravelImage[] = [];
+    console.log(`=== FILE SELECTION DEBUG ===`);
+    console.log(`Files selected: ${files.length}`);
     
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (!file.type.startsWith('image/')) continue;
+    if (files.length === 0) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      const newImages: TravelImage[] = [];
       
-      const preview = URL.createObjectURL(file);
-      const geoTag = await extractGeoTag(file);
+      // Convert FileList to Array for reliable iteration
+      const fileArray = Array.from(files);
+      console.log(`Processing ${fileArray.length} files...`);
       
-      newImages.push({
-        id: crypto.randomUUID(),
-        file,
-        preview,
-        geoTag,
-        order: images.length + newImages.length + 1
-      });
+      for (let i = 0; i < fileArray.length; i++) {
+        const file = fileArray[i];
+        console.log(`Processing file ${i + 1}/${fileArray.length}: ${file.name}`);
+        
+        if (!file.type.startsWith('image/')) {
+          console.log(`  -> Skipped (not an image): ${file.type}`);
+          continue;
+        }
+        
+        const preview = URL.createObjectURL(file);
+        const geoTag = await extractGeoTag(file);
+        
+        newImages.push({
+          id: crypto.randomUUID(),
+          file,
+          preview,
+          geoTag,
+          order: images.length + newImages.length + 1
+        });
+        
+        console.log(`  -> Added image ${newImages.length}`);
+      }
+      
+      console.log(`Total new images to add: ${newImages.length}`);
+      
+      if (newImages.length > 0) {
+        setImages(prev => {
+          const updated = [...prev, ...newImages];
+          console.log(`Images state updated: ${prev.length} -> ${updated.length}`);
+          return updated;
+        });
+      }
+    } finally {
+      setIsProcessing(false);
     }
-    
-    setImages(prev => [...prev, ...newImages]);
   }, [images.length]);
 
   const removeImage = (id: string) => {
@@ -137,7 +168,7 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
 
           {/* Upload area */}
           <div 
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => !isProcessing && fileInputRef.current?.click()}
             onDragOver={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -149,15 +180,25 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
             onDrop={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+              if (!isProcessing && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
                 handleFilesSelected(e.dataTransfer.files);
               }
             }}
-            className="mb-6 border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center cursor-pointer hover:border-purple-400 hover:bg-purple-50/50 transition-colors"
+            className={`mb-6 border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center cursor-pointer hover:border-purple-400 hover:bg-purple-50/50 transition-colors relative ${isProcessing ? 'pointer-events-none' : ''}`}
           >
-            <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-            <p className="text-slate-600 font-medium mb-1">Click to upload photos</p>
-            <p className="text-slate-400 text-sm">or drag and drop</p>
+            {isProcessing ? (
+              <>
+                <Loader2 className="w-12 h-12 text-purple-500 mx-auto mb-4 animate-spin" />
+                <p className="text-purple-600 font-medium mb-1">Processing images...</p>
+                <p className="text-slate-400 text-sm">Please wait</p>
+              </>
+            ) : (
+              <>
+                <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                <p className="text-slate-600 font-medium mb-1">Click to upload photos</p>
+                <p className="text-slate-400 text-sm">or drag and drop</p>
+              </>
+            )}
           </div>
 
           {/* Image grid */}
@@ -202,11 +243,18 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
               ))}
               {/* Add more button */}
               <button
-                onClick={() => fileInputRef.current?.click()}
-                className="aspect-square rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center hover:border-purple-400 hover:bg-purple-50/50 transition-colors"
+                onClick={() => !isProcessing && fileInputRef.current?.click()}
+                disabled={isProcessing}
+                className="aspect-square rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center hover:border-purple-400 hover:bg-purple-50/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Plus className="w-8 h-8 text-slate-400" />
-                <span className="text-xs text-slate-400 mt-1">Add more</span>
+                {isProcessing ? (
+                  <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+                ) : (
+                  <>
+                    <Plus className="w-8 h-8 text-slate-400" />
+                    <span className="text-xs text-slate-400 mt-1">Add more</span>
+                  </>
+                )}
               </button>
             </div>
           )}
@@ -229,11 +277,20 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
         <div className="max-w-lg mx-auto">
           <Button
             onClick={() => onNext(images)}
-            disabled={images.length === 0}
+            disabled={images.length === 0 || isProcessing}
             className="w-full h-12 rounded-xl bg-purple-500 hover:bg-purple-600 text-white font-medium"
           >
-            Continue to Tag Locations
-            <ArrowRight className="w-5 h-5 ml-2" />
+            {isProcessing ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                Continue to Tag Locations
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </>
+            )}
           </Button>
         </div>
       </div>

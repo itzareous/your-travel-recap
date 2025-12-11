@@ -3,7 +3,7 @@ export interface TravelDestination {
   type: 'country' | 'city';
   name: string;
   country: string;
-  image: string | null;
+  images: string[]; // Array of all images for this destination
   visitOrder: number;
 }
 

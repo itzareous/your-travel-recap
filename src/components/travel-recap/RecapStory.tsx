@@ -41,48 +41,81 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
         { type: 'summary' }
       ];
 
+  // Debug logging for slides
+  useEffect(() => {
+    console.log('=== RECAP STORY DEBUG ===');
+    console.log('Destinations received:', data.destinations.length);
+    console.log('Total slides:', slides.length);
+    slides.forEach((slide, i) => {
+      if (slide.type === 'destination') {
+        console.log(`  Slide ${i}: destination - ${slide.destination.name}`);
+      } else if (slide.type === 'journey') {
+        console.log(`  Slide ${i}: journey - ${slide.from.name} → ${slide.to.name}`);
+      } else {
+        console.log(`  Slide ${i}: ${slide.type}`);
+      }
+    });
+  }, [data.destinations, slides]);
+
   const currentSlide = slides[currentSlideIndex];
 
+  // Debug current slide
+  useEffect(() => {
+    console.log(`Current slide: ${currentSlideIndex + 1} of ${slides.length} (type: ${currentSlide?.type})`);
+  }, [currentSlideIndex, slides.length, currentSlide?.type]);
+
   const goToNext = useCallback(() => {
-    if (currentSlideIndex < slides.length - 1) {
+    if (currentSlideIndex < slides.length - 1 && !isAnimating) {
       setIsAnimating(true);
+      setProgress(0);
       setTimeout(() => {
-        setCurrentSlideIndex(prev => prev + 1);
+        setCurrentSlideIndex(prev => Math.min(prev + 1, slides.length - 1));
         setIsAnimating(false);
-        setProgress(0);
       }, 300);
     }
-  }, [currentSlideIndex, slides.length]);
+  }, [currentSlideIndex, slides.length, isAnimating]);
 
   const goToPrev = useCallback(() => {
-    if (currentSlideIndex > 0) {
+    if (currentSlideIndex > 0 && !isAnimating) {
       setIsAnimating(true);
+      setProgress(0);
       setTimeout(() => {
-        setCurrentSlideIndex(prev => prev - 1);
+        setCurrentSlideIndex(prev => Math.max(prev - 1, 0));
         setIsAnimating(false);
-        setProgress(0);
       }, 300);
     }
-  }, [currentSlideIndex]);
+  }, [currentSlideIndex, isAnimating]);
 
   // Auto-advance timer
   useEffect(() => {
+    // Don't auto-advance on summary slide
+    if (currentSlide.type === 'summary') {
+      return;
+    }
+
     const duration = currentSlide.type === 'journey' ? 3000 : 5000;
     const interval = 50;
     const increment = (interval / duration) * 100;
 
-    const timer = setInterval(() => {
+    const progressTimer = setInterval(() => {
       setProgress(prev => {
-        if (prev >= 100) {
-          goToNext();
-          return 0;
+        const newProgress = prev + increment;
+        if (newProgress >= 100) {
+          return 100;
         }
-        return prev + increment;
+        return newProgress;
       });
     }, interval);
 
-    return () => clearInterval(timer);
-  }, [currentSlideIndex, currentSlide.type, goToNext]);
+    return () => clearInterval(progressTimer);
+  }, [currentSlideIndex, currentSlide.type]);
+
+  // Separate effect to handle slide advancement when progress reaches 100
+  useEffect(() => {
+    if (progress >= 100 && currentSlide.type !== 'summary') {
+      goToNext();
+    }
+  }, [progress, currentSlide.type, goToNext]);
 
   // Handle tap navigation
   const handleTap = (e: React.MouseEvent) => {
@@ -207,17 +240,45 @@ function IntroSlide({ profile, totalDestinations }: { profile: TravelRecapData['
 
 function DestinationSlide({ destination }: { destination: TravelDestination }) {
   const displayName = getDestinationDisplayName(destination);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const { images } = destination;
+  
+  // Cycle through images if multiple
+  useEffect(() => {
+    if (images.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      setCurrentImageIndex(prev => (prev + 1) % images.length);
+    }, 1500); // Change image every 1.5 seconds
+    
+    return () => clearInterval(interval);
+  }, [images.length]);
+
+  // Reset image index when destination changes
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [destination.id]);
   
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-8">
-      {destination.image ? (
+      {images.length > 0 ? (
         <div className="relative w-full max-w-sm aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl">
           <img 
-            src={destination.image} 
+            src={images[currentImageIndex]} 
             alt={displayName}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-opacity duration-300"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+          
+          {/* Image counter badge if multiple images */}
+          {images.length > 1 && (
+            <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">
+              <span className="text-white text-sm font-medium">
+                {currentImageIndex + 1} / {images.length}
+              </span>
+            </div>
+          )}
+          
           <div className="absolute bottom-0 left-0 right-0 p-6">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
@@ -226,6 +287,11 @@ function DestinationSlide({ destination }: { destination: TravelDestination }) {
               <span className="text-white/60 text-sm">Stop #{destination.visitOrder}</span>
             </div>
             <h2 className="text-3xl font-bold text-white">{displayName}</h2>
+            {images.length > 1 && (
+              <p className="text-white/60 text-sm mt-1">
+                {images.length} memories from this place
+              </p>
+            )}
           </div>
         </div>
       ) : (

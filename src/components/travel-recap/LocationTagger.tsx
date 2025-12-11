@@ -90,41 +90,70 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
   };
 
   const generateDestinations = () => {
-    const locationMap = new Map<string, TravelImage>();
+    console.log('=== DESTINATION GENERATION DEBUG ===');
+    console.log('Total images:', taggedImages.length);
     
-    taggedImages.forEach(img => {
+    const taggedWithLocation = taggedImages.filter(img => img.location);
+    console.log('Images with location:', taggedWithLocation.length);
+    
+    if (taggedWithLocation.length === 0) {
+      console.log('No tagged images, returning empty destinations');
+      onComplete([]);
+      return;
+    }
+
+    // Map to collect ALL images for each destination
+    const destinationMap = new Map<string, {
+      type: 'country' | 'city';
+      name: string;
+      country: string;
+      images: string[];
+      firstIndex: number;
+    }>();
+    
+    taggedWithLocation.forEach((img, index) => {
       if (img.location) {
         const key = img.location.type === 'city' 
-          ? `city:${img.location.name}:${img.location.country}`
-          : `country:${img.location.country}`;
+          ? `city:${img.location.name.toLowerCase()}:${img.location.country.toLowerCase()}`
+          : `country:${img.location.country.toLowerCase()}`;
         
-        if (!locationMap.has(key)) {
-          locationMap.set(key, img);
+        console.log(`Image ${index}: key="${key}", location=`, img.location);
+        
+        if (!destinationMap.has(key)) {
+          // First image for this destination - create new entry
+          destinationMap.set(key, {
+            type: img.location.type,
+            name: img.location.name,
+            country: img.location.country,
+            images: [img.preview],
+            firstIndex: index
+          });
+          console.log(`  -> Created new destination with first image`);
+        } else {
+          // Additional image for existing destination - add to array
+          const existing = destinationMap.get(key)!;
+          existing.images.push(img.preview);
+          console.log(`  -> Added image to existing destination (now ${existing.images.length} images)`);
         }
       }
     });
 
-    const destinations: TravelDestination[] = [];
-    let order = 1;
-    
-    taggedImages.forEach(img => {
-      if (img.location) {
-        const key = img.location.type === 'city' 
-          ? `city:${img.location.name}:${img.location.country}`
-          : `country:${img.location.country}`;
-        
-        const firstImage = locationMap.get(key);
-        if (firstImage?.id === img.id) {
-          destinations.push({
-            id: crypto.randomUUID(),
-            type: img.location.type,
-            name: img.location.name,
-            country: img.location.country,
-            image: img.preview,
-            visitOrder: order++
-          });
-        }
-      }
+    // Convert map to array, sorted by first appearance order
+    const destinations: TravelDestination[] = Array.from(destinationMap.entries())
+      .sort((a, b) => a[1].firstIndex - b[1].firstIndex)
+      .map(([_, data], index) => ({
+        id: crypto.randomUUID(),
+        type: data.type,
+        name: data.name,
+        country: data.country,
+        images: data.images,
+        visitOrder: index + 1
+      }));
+
+    console.log('=== FINAL DESTINATIONS ===');
+    console.log('Total destinations:', destinations.length);
+    destinations.forEach((d, i) => {
+      console.log(`  ${i + 1}. ${d.name}, ${d.country} (order: ${d.visitOrder}, images: ${d.images.length})`);
     });
 
     onComplete(destinations);

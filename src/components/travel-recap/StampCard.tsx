@@ -22,6 +22,10 @@ export default function StampCard({ destination, isActive = false, size = 'md' }
 
   const displayName = destination.type === 'city' ? destination.name : destination.name;
   const subText = destination.type === 'city' ? destination.country : null;
+  
+  // Get first image from images array
+  const firstImage = destination.images?.[0] || null;
+  const imageCount = destination.images?.length || 0;
 
   // Generate stable rotation based on destination id to avoid re-render jitter
   const rotation = useMemo(() => {
@@ -69,12 +73,20 @@ export default function StampCard({ destination, isActive = false, size = 'md' }
 
         {/* Image area */}
         <div className="flex-1 relative bg-slate-100">
-          {destination.image ? (
-            <img
-              src={destination.image}
-              alt={getDestinationDisplayName(destination)}
-              className="w-full h-full object-cover"
-            />
+          {firstImage ? (
+            <>
+              <img
+                src={firstImage}
+                alt={getDestinationDisplayName(destination)}
+                className="w-full h-full object-cover"
+              />
+              {/* Image count badge if multiple images */}
+              {imageCount > 1 && (
+                <div className="absolute top-1 left-1 bg-white/90 w-5 h-5 rounded-full flex items-center justify-center shadow-sm">
+                  <span className="text-[8px] font-bold text-purple-600">{imageCount}</span>
+                </div>
+              )}
+            </>
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300">
               <span className="text-slate-400 text-2xl">{destination.type === 'city' ? '🏙️' : '🌍'}</span>
