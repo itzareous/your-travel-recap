@@ -31,7 +31,7 @@ export default function ProfileSetup({ onNext, onBack, initialProfile }: Profile
         >
           <ArrowLeft className="w-6 h-6 text-slate-600" />
         </button>
-        <span className="text-sm text-slate-500 font-medium">Step 1 of 3</span>
+        <span className="text-sm text-slate-500 font-medium">Step 1 of 4</span>
         <div className="w-10" />
       </div>
 

@@ -164,7 +164,7 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
         >
           <ArrowLeft className="w-6 h-6 text-slate-600" />
         </button>
-        <span className="text-sm text-slate-500">Image {currentIndex + 1} of {taggedImages.length}</span>
+        <span className="text-sm text-slate-500">Step 3 of 4 • Image {currentIndex + 1} of {taggedImages.length}</span>
         <div className="w-10" />
       </div>
 
@@ -214,7 +214,13 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
                   Confirm
                 </Button>
                 <Button
-                  onClick={() => setShowSuggestion(false)}
+                  onClick={() => {
+                    setShowSuggestion(false);
+                    // Pre-fill country from suggestion
+                    if (currentImage.geoTag?.suggestedCountry) {
+                      setSelectedCountry(currentImage.geoTag.suggestedCountry);
+                    }
+                  }}
                   variant="outline"
                   className="flex-1 h-10 rounded-xl"
                 >

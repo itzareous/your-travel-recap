@@ -24,17 +24,22 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
   const slideRef = useRef<HTMLDivElement>(null);
 
   // Build slides array
-  const slides: StorySlide[] = [
-    { type: 'intro' },
-    ...data.destinations.flatMap((dest, i) => {
-      const slideGroup: StorySlide[] = [{ type: 'destination', destination: dest }];
-      if (i < data.destinations.length - 1) {
-        slideGroup.push({ type: 'journey', from: dest, to: data.destinations[i + 1] });
-      }
-      return slideGroup;
-    }),
-    { type: 'summary' }
-  ];
+  const slides: StorySlide[] = data.destinations.length > 0 
+    ? [
+        { type: 'intro' },
+        ...data.destinations.flatMap((dest, i) => {
+          const slideGroup: StorySlide[] = [{ type: 'destination', destination: dest }];
+          if (i < data.destinations.length - 1) {
+            slideGroup.push({ type: 'journey', from: dest, to: data.destinations[i + 1] });
+          }
+          return slideGroup;
+        }),
+        { type: 'summary' }
+      ]
+    : [
+        { type: 'intro' },
+        { type: 'summary' }
+      ];
 
   const currentSlide = slides[currentSlideIndex];
 
@@ -275,16 +280,26 @@ function SummarySlide({ data, onShare, onRestart }: { data: TravelRecapData; onS
       <p className="text-white/60 mb-6">@{data.profile.username}</p>
       
       {/* Stamp collection preview */}
-      <div className="flex flex-wrap justify-center gap-2 mb-8 max-w-sm">
-        {data.destinations.slice(0, 6).map((dest) => (
-          <StampCard key={dest.id} destination={dest} size="sm" />
-        ))}
-        {data.destinations.length > 6 && (
-          <div className="w-24 h-28 bg-white/10 rounded-lg flex items-center justify-center">
-            <span className="text-white/60">+{data.destinations.length - 6} more</span>
+      {data.destinations.length > 0 ? (
+        <div className="flex flex-wrap justify-center gap-2 mb-8 max-w-sm">
+          {data.destinations.slice(0, 6).map((dest) => (
+            <StampCard key={dest.id} destination={dest} size="sm" />
+          ))}
+          {data.destinations.length > 6 && (
+            <div className="w-24 h-28 bg-white/10 rounded-lg flex items-center justify-center">
+              <span className="text-white/60">+{data.destinations.length - 6} more</span>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="mb-8 text-center">
+          <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <MapPin className="w-10 h-10 text-white/40" />
           </div>
-        )}
-      </div>
+          <p className="text-white/60">No destinations tagged yet</p>
+          <p className="text-white/40 text-sm">Go back and tag your travel photos!</p>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 mb-8 w-full max-w-xs">
@@ -302,7 +317,8 @@ function SummarySlide({ data, onShare, onRestart }: { data: TravelRecapData; onS
       <div className="flex flex-col gap-3 w-full max-w-xs">
         <Button 
           onClick={onShare}
-          className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl font-semibold"
+          disabled={data.destinations.length === 0}
+          className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl font-semibold disabled:opacity-50"
         >
           <Download className="w-5 h-5 mr-2" />
           Download My Recap

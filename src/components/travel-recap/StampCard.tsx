@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { TravelDestination, getDestinationDisplayName } from "./types";
 
 interface StampCardProps {
@@ -22,11 +23,17 @@ export default function StampCard({ destination, isActive = false, size = 'md' }
   const displayName = destination.type === 'city' ? destination.name : destination.name;
   const subText = destination.type === 'city' ? destination.country : null;
 
+  // Generate stable rotation based on destination id to avoid re-render jitter
+  const rotation = useMemo(() => {
+    const hash = destination.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return (hash % 6) - 3;
+  }, [destination.id]);
+
   return (
     <div 
       className={`relative ${sizeClasses[size]} ${isActive ? 'animate-pulse' : ''}`}
       style={{
-        transform: isActive ? 'rotate(-3deg)' : `rotate(${Math.random() * 6 - 3}deg)`,
+        transform: isActive ? 'rotate(-3deg)' : `rotate(${rotation}deg)`,
       }}
     >
       {/* Stamp outer border with perforations */}

@@ -18,17 +18,34 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
     try {
       const exifData = await exifr.gps(file);
       if (exifData && exifData.latitude && exifData.longitude) {
-        // Try to reverse geocode
+        // Try to reverse geocode with higher zoom for better city detection
         try {
           const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${exifData.latitude}&lon=${exifData.longitude}&zoom=10`
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${exifData.latitude}&lon=${exifData.longitude}&zoom=14&addressdetails=1`,
+            {
+              headers: {
+                'User-Agent': 'TravelRecapApp/1.0'
+              }
+            }
           );
           const data = await response.json();
+          
+          // Extract city from various possible fields
+          const suggestedCity = data.address?.city || 
+                               data.address?.town || 
+                               data.address?.village || 
+                               data.address?.locality ||
+                               data.address?.municipality ||
+                               data.address?.suburb ||
+                               data.address?.district;
+          
+          const suggestedCountry = data.address?.country;
+          
           return {
             lat: exifData.latitude,
             lng: exifData.longitude,
-            suggestedCity: data.address?.city || data.address?.town || data.address?.village,
-            suggestedCountry: data.address?.country
+            suggestedCity: suggestedCity || undefined,
+            suggestedCountry: suggestedCountry || undefined
           };
         } catch {
           return {
@@ -99,7 +116,7 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
         >
           <ArrowLeft className="w-6 h-6 text-slate-600" />
         </button>
-        <span className="text-sm text-slate-500">Step 2 of 3</span>
+        <span className="text-sm text-slate-500">Step 2 of 4</span>
         <div className="w-10" />
       </div>
 
@@ -121,6 +138,21 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
           {/* Upload area */}
           <div 
             onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                handleFilesSelected(e.dataTransfer.files);
+              }
+            }}
             className="mb-6 border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center cursor-pointer hover:border-purple-400 hover:bg-purple-50/50 transition-colors"
           >
             <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />

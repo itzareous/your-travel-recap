@@ -71,7 +71,7 @@ export default function TravelRecapApp() {
       {step === 'story' && (
         <RecapStory
           data={recapData}
-          onBack={() => setStep('upload')}
+          onBack={() => setStep('tag')}
           onRestart={handleRestart}
         />
       )}
