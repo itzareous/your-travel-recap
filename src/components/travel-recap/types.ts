@@ -5,6 +5,7 @@ export interface TravelDestination {
   country: string;
   images: string[]; // Array of all images for this destination
   visitOrder: number;
+  earliestTimestamp?: number; // For chronological ordering
 }
 
 export interface TravelImage {

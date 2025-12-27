@@ -109,13 +109,14 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
       return;
     }
 
-    // Map to collect ALL images for each destination
+    // Map to collect ALL images for each destination with timestamps
     const destinationMap = new Map<string, {
       type: 'country' | 'city';
       name: string;
       country: string;
       images: string[];
-      firstIndex: number;
+      timestamps: number[];
+      earliestTimestamp: number;
     }>();
     
     taggedWithLocation.forEach((img, index) => {
@@ -124,7 +125,8 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
           ? `city:${img.location.name.toLowerCase()}:${img.location.country.toLowerCase()}`
           : `country:${img.location.country.toLowerCase()}`;
         
-        console.log(`Image ${index}: key="${key}", location=`, img.location);
+        const timestamp = img.timestamp || Date.now();
+        console.log(`Image ${index}: key="${key}", timestamp=${new Date(timestamp).toISOString()}, location=`, img.location);
         
         if (!destinationMap.has(key)) {
           // First image for this destination - create new entry
@@ -133,28 +135,35 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
             name: img.location.name,
             country: img.location.country,
             images: [img.preview],
-            firstIndex: index
+            timestamps: [timestamp],
+            earliestTimestamp: timestamp
           });
           console.log(`  -> Created new destination with first image`);
         } else {
           // Additional image for existing destination - add to array
           const existing = destinationMap.get(key)!;
           existing.images.push(img.preview);
+          existing.timestamps.push(timestamp);
+          // Update earliest timestamp if this one is earlier
+          if (timestamp < existing.earliestTimestamp) {
+            existing.earliestTimestamp = timestamp;
+          }
           console.log(`  -> Added image to existing destination (now ${existing.images.length} images)`);
         }
       }
     });
 
-    // Convert map to array, sorted by first appearance order
+    // Convert map to array, sorted by earliest timestamp (chronological order)
     const destinations: TravelDestination[] = Array.from(destinationMap.entries())
-      .sort((a, b) => a[1].firstIndex - b[1].firstIndex)
+      .sort((a, b) => a[1].earliestTimestamp - b[1].earliestTimestamp)
       .map(([_, data], index) => ({
         id: crypto.randomUUID(),
         type: data.type,
         name: data.name,
         country: data.country,
         images: data.images,
-        visitOrder: index + 1
+        visitOrder: index + 1,
+        earliestTimestamp: data.earliestTimestamp
       }));
 
     console.log('=== FINAL DESTINATIONS ===');
