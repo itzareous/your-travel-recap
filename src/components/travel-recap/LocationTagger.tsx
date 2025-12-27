@@ -193,26 +193,41 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
 
   return (
     <div className="min-h-screen bg-[#0F172A] flex flex-col">
-      <div className="p-4 flex items-center justify-between">
+      {/* Fixed Top Navigation Bar */}
+      <div className="fixed top-0 left-0 right-0 bg-[#0F172A] border-b border-[#233038] p-4 flex items-center justify-between z-10">
+        {/* Back button - left */}
         <button 
           onClick={onBack}
           className="p-2 hover:bg-[#233038] rounded-full transition-colors"
         >
           <ArrowLeft className="w-6 h-6 text-[#D3DBDD]" />
         </button>
-        <span className="text-sm text-[#D3DBDD]">Step 4 of 4 • Image {currentIndex + 1} of {taggedImages.length}</span>
-        <div className="w-10" />
-      </div>
-
-      {/* Progress bar */}
-      <div className="px-6 mb-4">
-        <div className="h-2 bg-[#233038] rounded-full overflow-hidden">
-          <div className="h-full bg-[#FF5B04] rounded-full transition-all" style={{ width: `${((currentIndex + 1) / taggedImages.length) * 100}%` }} />
+        
+        {/* Step indicator - center */}
+        <div className="text-center">
+          <p className="text-[#D3DBDD] text-sm">
+            Step 4 of 4 • Image {currentIndex + 1} of {taggedImages.length}
+          </p>
         </div>
+        
+        {/* Next button - right */}
+        <button
+          onClick={hasSuggestion && showSuggestion ? confirmSuggestion : saveLocation}
+          disabled={
+            (!hasSuggestion && !showSuggestion && locationType === 'country' && !selectedCountry) ||
+            (!hasSuggestion && !showSuggestion && locationType === 'city' && (!cityName.trim() || !selectedCountry))
+          }
+          className="text-[#FF5B04] hover:text-[#E54F03] disabled:text-[#233038] disabled:cursor-not-allowed font-semibold flex items-center gap-1 transition-colors"
+        >
+          {isLastImage ? 'Done' : 'Next'}
+          <ArrowRight className="w-5 h-5" />
+        </button>
       </div>
 
-      <div className="px-4 mb-4">
-        <div className="flex gap-1 justify-center">
+      {/* Main Content - with padding for fixed header and footer */}
+      <div className="pt-20 pb-36 flex-1 overflow-y-auto">
+        {/* Progress dots */}
+        <div className="flex justify-center gap-1 py-4 px-4 flex-wrap">
           {taggedImages.map((img, i) => (
             <div 
               key={img.id}
@@ -226,109 +241,163 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
             />
           ))}
         </div>
-      </div>
 
-      <div className="flex-1 px-4 pb-4 overflow-y-auto">
-        <div className="max-w-lg mx-auto">
-          <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-6 border border-[#075056]">
+        {/* Image container - takes most of the space */}
+        <div className="relative px-4">
+          <div className="relative max-w-2xl mx-auto">
             <img 
               src={currentImage.preview} 
               alt="Travel memory"
-              className="w-full h-full object-cover"
+              className="w-full h-[55vh] md:h-[50vh] object-contain rounded-2xl border-4 border-[#233038]"
             />
-          </div>
-
-          {hasSuggestion && showSuggestion && (
-            <div className="mb-6 p-4 bg-[#075056] border-l-4 border-[#F4D47C] rounded-xl">
-              <p className="text-sm text-[#FDF6E3] mb-3">
-                📍 We detected this might be from{' '}
-                <strong className="text-[#F4D47C]">
+            
+            {/* Location suggestion overlay - positioned at bottom of image */}
+            {hasSuggestion && showSuggestion && (
+              <div className="absolute bottom-4 left-4 right-4 bg-[#075056]/95 border-l-4 border-[#F4D47C] rounded-lg p-4 backdrop-blur-sm">
+                <p className="text-[#FDF6E3] text-sm mb-1">
+                  📍 We detected this might be from
+                </p>
+                <p className="text-[#F4D47C] text-lg font-bold">
                   {currentImage.geoTag?.suggestedCity 
                     ? `${currentImage.geoTag.suggestedCity}, ${currentImage.geoTag.suggestedCountry}`
                     : currentImage.geoTag?.suggestedCountry}
-                </strong>
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  onClick={confirmSuggestion}
-                  className="flex-1 h-10 rounded-full bg-[#2563EB] hover:bg-[#1E40AF] text-white transition-colors"
-                >
-                  <Check className="w-4 h-4 mr-2" />
-                  Confirm
-                </Button>
-                <Button
-                  onClick={() => {
-                    setShowSuggestion(false);
-                    if (currentImage.geoTag?.suggestedCountry) {
-                      setSelectedCountry(currentImage.geoTag.suggestedCountry);
-                    }
-                  }}
-                  variant="outline"
-                  className="flex-1 h-10 rounded-full border-2 border-[#D3DBDD] text-[#D3DBDD] hover:border-[#FF5B04] hover:text-[#FF5B04] bg-transparent transition-colors"
-                >
-                  Change Location
-                </Button>
+                </p>
               </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Fixed Footer with Action Buttons */}
+      <div className="fixed bottom-0 left-0 right-0 bg-[#233038] border-t border-[#075056] p-4 z-10">
+        {/* Show confirm/change buttons when suggestion exists */}
+        {hasSuggestion && showSuggestion ? (
+          <div className="flex gap-3 max-w-2xl mx-auto">
+            {/* Confirm button */}
+            <button
+              onClick={confirmSuggestion}
+              className="flex-1 bg-[#2563EB] hover:bg-[#1E40AF] text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all"
+            >
+              <Check className="w-5 h-5" />
+              Confirm
+            </button>
+            
+            {/* Change Location button */}
+            <button
+              onClick={() => {
+                setShowSuggestion(false);
+                if (currentImage.geoTag?.suggestedCountry) {
+                  setSelectedCountry(currentImage.geoTag.suggestedCountry);
+                }
+              }}
+              className="flex-1 bg-transparent border-2 border-[#D3DBDD] text-[#D3DBDD] hover:border-[#FF5B04] hover:text-[#FF5B04] py-4 rounded-xl font-semibold transition-all"
+            >
+              Change Location
+            </button>
+          </div>
+        ) : (
+          // Manual input form in footer
+          <div className="max-w-2xl mx-auto space-y-3">
+            {/* Type toggle */}
+            <div className="flex gap-2 bg-[#0F172A] rounded-lg p-1">
+              <button
+                onClick={() => setLocationType('city')}
+                className={`flex-1 py-2 rounded-md font-medium transition-all flex items-center justify-center gap-2 ${
+                  locationType === 'city'
+                    ? 'bg-[#FF5B04] text-white'
+                    : 'text-[#D3DBDD]'
+                }`}
+              >
+                <Building2 className="w-4 h-4" />
+                City
+              </button>
+              <button
+                onClick={() => setLocationType('country')}
+                className={`flex-1 py-2 rounded-md font-medium transition-all flex items-center justify-center gap-2 ${
+                  locationType === 'country'
+                    ? 'bg-[#FF5B04] text-white'
+                    : 'text-[#D3DBDD]'
+                }`}
+              >
+                <Globe className="w-4 h-4" />
+                Country
+              </button>
             </div>
-          )}
-
-          {(!hasSuggestion || !showSuggestion) && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-[#FDF6E3]">Where was this photo taken?</h3>
-              
+            
+            {/* Input fields */}
+            {locationType === 'city' ? (
               <div className="flex gap-2">
-                <button
-                  onClick={() => setLocationType('city')}
-                  className={`flex-1 h-12 rounded-full flex items-center justify-center gap-2 transition-colors ${
-                    locationType === 'city' 
-                      ? 'bg-[#FF5B04] text-white' 
-                      : 'border-2 border-[#075056] bg-[#233038] text-[#D3DBDD] hover:border-[#FF5B04]'
-                  }`}
-                >
-                  <Building2 className="w-5 h-5" />
-                  City
-                </button>
-                <button
-                  onClick={() => setLocationType('country')}
-                  className={`flex-1 h-12 rounded-full flex items-center justify-center gap-2 transition-colors ${
-                    locationType === 'country' 
-                      ? 'bg-[#FF5B04] text-white' 
-                      : 'border-2 border-[#075056] bg-[#233038] text-[#D3DBDD] hover:border-[#FF5B04]'
-                  }`}
-                >
-                  <Globe className="w-5 h-5" />
-                  Country
-                </button>
-              </div>
-
-              {locationType === 'city' && (
-                <div>
-                  <label className="block text-sm font-medium text-[#D3DBDD] mb-2">City name</label>
-                  <Input
-                    value={cityName}
-                    onChange={(e) => setCityName(e.target.value)}
-                    placeholder="e.g., Lagos, New York, Paris"
-                    className="h-12 rounded-xl bg-[#0F172A] border-[#075056] text-[#FDF6E3] placeholder:text-[#D3DBDD] focus:border-[#FF5B04]"
-                  />
+                <Input
+                  type="text"
+                  placeholder="City name"
+                  value={cityName}
+                  onChange={(e) => setCityName(e.target.value)}
+                  className="flex-1 bg-[#0F172A] border border-[#075056] text-[#FDF6E3] px-4 py-3 rounded-lg focus:border-[#FF5B04] focus:outline-none placeholder:text-[#D3DBDD]"
+                />
+                <div className="relative flex-1">
+                  <button
+                    onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                    className="w-full h-full px-4 py-3 rounded-lg border border-[#075056] bg-[#0F172A] flex items-center justify-between text-left hover:border-[#FF5B04] transition-colors"
+                  >
+                    <span className={`truncate ${selectedCountry ? 'text-[#FDF6E3]' : 'text-[#D3DBDD]'}`}>
+                      {selectedCountry || 'Country'}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 text-[#D3DBDD] transition-transform flex-shrink-0 ${showCountryDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {showCountryDropdown && (
+                    <div className="absolute z-20 bottom-full left-0 right-0 mb-1 bg-[#233038] rounded-xl border border-[#075056] shadow-lg max-h-60 overflow-hidden">
+                      <div className="p-2 border-b border-[#075056]">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#D3DBDD]" />
+                          <Input
+                            value={countrySearch}
+                            onChange={(e) => setCountrySearch(e.target.value)}
+                            placeholder="Search..."
+                            className="h-10 pl-9 rounded-lg bg-[#0F172A] border-[#075056] text-[#FDF6E3] placeholder:text-[#D3DBDD] focus:border-[#FF5B04]"
+                            autoFocus
+                          />
+                        </div>
+                      </div>
+                      <div className="max-h-40 overflow-y-auto">
+                        {filteredCountries.map(country => (
+                          <button
+                            key={country}
+                            onClick={() => {
+                              setSelectedCountry(country);
+                              setShowCountryDropdown(false);
+                              setCountrySearch("");
+                            }}
+                            className={`w-full px-4 py-2.5 text-left hover:bg-[#075056] flex items-center gap-2 transition-colors ${
+                              selectedCountry === country ? 'bg-[#FF5B04] text-white' : 'text-[#FDF6E3]'
+                            }`}
+                          >
+                            {selectedCountry === country && <Check className="w-4 h-4" />}
+                            {country}
+                          </button>
+                        ))}
+                        {filteredCountries.length === 0 && (
+                          <div className="px-4 py-3 text-[#D3DBDD] text-center">No countries found</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-
+              </div>
+            ) : (
               <div className="relative">
-                <label className="block text-sm font-medium text-[#D3DBDD] mb-2">
-                  {locationType === 'city' ? 'Country' : 'Select country'}
-                </label>
                 <button
                   onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                  className="w-full h-12 px-4 rounded-xl border border-[#075056] bg-[#233038] flex items-center justify-between text-left hover:border-[#FF5B04] transition-colors"
+                  className="w-full px-4 py-3 rounded-lg border border-[#075056] bg-[#0F172A] flex items-center justify-between text-left hover:border-[#FF5B04] transition-colors"
                 >
                   <span className={selectedCountry ? 'text-[#FDF6E3]' : 'text-[#D3DBDD]'}>
-                    {selectedCountry || 'Select a country'}
+                    {selectedCountry || 'Select country'}
                   </span>
                   <ChevronDown className={`w-5 h-5 text-[#D3DBDD] transition-transform ${showCountryDropdown ? 'rotate-180' : ''}`} />
                 </button>
                 
                 {showCountryDropdown && (
-                  <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-[#233038] rounded-xl border border-[#075056] shadow-lg max-h-60 overflow-hidden">
+                  <div className="absolute z-20 bottom-full left-0 right-0 mb-1 bg-[#233038] rounded-xl border border-[#075056] shadow-lg max-h-60 overflow-hidden">
                     <div className="p-2 border-b border-[#075056]">
                       <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#D3DBDD]" />
@@ -341,7 +410,7 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
                         />
                       </div>
                     </div>
-                    <div className="max-h-48 overflow-y-auto">
+                    <div className="max-h-40 overflow-y-auto">
                       {filteredCountries.map(country => (
                         <button
                           key={country}
@@ -365,32 +434,14 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
                   </div>
                 )}
               </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="p-4 bg-[#233038] border-t border-[#075056]">
-        <div className="max-w-lg mx-auto">
-          {/* Error message */}
-          {error && (
-            <p className="text-[#FF5B04] text-sm mb-3 text-center">{error}</p>
-          )}
-          
-          {/* Only show Next button - no Skip */}
-          <Button
-            onClick={saveLocation}
-            disabled={
-              (hasSuggestion && showSuggestion) || // User must confirm or change suggestion first
-              (!hasSuggestion && locationType === 'country' && !selectedCountry) ||
-              (!hasSuggestion && locationType === 'city' && (!cityName.trim() || !selectedCountry))
-            }
-            className="w-full h-12 rounded-full bg-[#FF5B04] hover:bg-[#E54F03] text-white font-medium disabled:bg-[#233038] disabled:text-[#D3DBDD] transition-colors"
-          >
-            {isLastImage ? 'Generate Recap' : 'Next'}
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </Button>
-        </div>
+            )}
+            
+            {/* Error message */}
+            {error && (
+              <p className="text-[#FF5B04] text-sm text-center">{error}</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
