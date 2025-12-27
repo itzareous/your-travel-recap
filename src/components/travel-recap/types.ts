@@ -22,6 +22,7 @@ export interface TravelImage {
     suggestedCity?: string;
     suggestedCountry?: string;
   };
+  timestamp?: number; // Unix timestamp in milliseconds from EXIF or file lastModified
   order: number;
 }
 

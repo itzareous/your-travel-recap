@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { TravelImage } from "./types";
-import { ArrowLeft, ArrowRight, Plus, X, Upload, Image as ImageIcon, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Plus, X, Upload, Image as ImageIcon, Loader2, MapPin } from "lucide-react";
 import exifr from "exifr";
 
 interface ImageUploaderProps {
@@ -15,10 +15,25 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const extractGeoTag = async (file: File): Promise<TravelImage['geoTag'] | undefined> => {
+  const extractExifData = async (file: File): Promise<{ geoTag?: TravelImage['geoTag']; timestamp?: number }> => {
+    let geoTag: TravelImage['geoTag'] | undefined;
+    let timestamp: number | undefined;
+
     try {
-      const exifData = await exifr.gps(file);
-      if (exifData && exifData.latitude && exifData.longitude) {
+      // Parse EXIF with both GPS and date fields
+      const exifData = await exifr.parse(file, {
+        gps: true,
+        pick: ['latitude', 'longitude', 'DateTimeOriginal', 'CreateDate']
+      });
+
+      // Extract timestamp
+      if (exifData?.DateTimeOriginal || exifData?.CreateDate) {
+        const dateStr = exifData.DateTimeOriginal || exifData.CreateDate;
+        timestamp = new Date(dateStr).getTime();
+      }
+
+      // Extract GPS data
+      if (exifData?.latitude && exifData?.longitude) {
         // Try to reverse geocode with higher zoom for better city detection
         try {
           const response = await fetch(
@@ -42,14 +57,14 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
           
           const suggestedCountry = data.address?.country;
           
-          return {
+          geoTag = {
             lat: exifData.latitude,
             lng: exifData.longitude,
             suggestedCity: suggestedCity || undefined,
             suggestedCountry: suggestedCountry || undefined
           };
         } catch {
-          return {
+          geoTag = {
             lat: exifData.latitude,
             lng: exifData.longitude
           };
@@ -58,7 +73,13 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
     } catch {
       // No EXIF data or error reading it
     }
-    return undefined;
+
+    // Fallback to file lastModified if no EXIF timestamp
+    if (!timestamp) {
+      timestamp = file.lastModified;
+    }
+
+    return { geoTag, timestamp };
   };
 
   const handleFilesSelected = useCallback(async (files: FileList) => {
@@ -86,13 +107,14 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
         }
         
         const preview = URL.createObjectURL(file);
-        const geoTag = await extractGeoTag(file);
+        const { geoTag, timestamp } = await extractExifData(file);
         
         newImages.push({
           id: crypto.randomUUID(),
           file,
           preview,
           geoTag,
+          timestamp,
           order: images.length + newImages.length + 1
         });
         
@@ -123,7 +145,7 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
   const taggedCount = images.filter(img => img.location).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[#0F172A] flex flex-col">
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -143,69 +165,78 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
       <div className="p-4 flex items-center justify-between">
         <button 
           onClick={onBack}
-          className="p-2 hover:bg-slate-200 rounded-full transition-colors"
+          className="p-2 hover:bg-[#233038] rounded-full transition-colors"
         >
-          <ArrowLeft className="w-6 h-6 text-slate-600" />
+          <ArrowLeft className="w-6 h-6 text-[#D3DBDD]" />
         </button>
-        <span className="text-sm text-slate-500">Step 2 of 4</span>
+        <span className="text-sm text-[#D3DBDD]">Step 2 of 4</span>
         <div className="w-10" />
+      </div>
+
+      {/* Progress bar */}
+      <div className="px-6 mb-4">
+        <div className="h-2 bg-[#233038] rounded-full overflow-hidden">
+          <div className="h-full w-2/4 bg-[#FF5B04] rounded-full" />
+        </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 px-4 pb-4 overflow-y-auto">
         <div className="max-w-lg mx-auto">
-          <h1 className="text-2xl font-bold text-slate-800 mb-2">Upload your travel memories</h1>
-          <p className="text-slate-500 mb-6">Add photos from your travels and we'll help you tag them</p>
+          <h1 className="text-2xl font-bold text-[#FDF6E3] mb-2">Upload your travel memories</h1>
+          <p className="text-[#D3DBDD] mb-6">Add photos from your travels and we'll help you tag them</p>
 
           {/* Progress indicator */}
           {images.length > 0 && (
-            <div className="mb-4 p-3 bg-purple-50 rounded-xl">
-              <p className="text-sm text-purple-700">
+            <div className="mb-4 p-3 bg-[#233038] rounded-xl border border-[#075056]">
+              <p className="text-sm text-[#F4D47C]">
                 {taggedCount} of {images.length} images tagged
               </p>
             </div>
           )}
 
-          {/* Upload area */}
-          <div 
-            onClick={() => !isProcessing && fileInputRef.current?.click()}
-            onDragOver={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onDragEnter={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (!isProcessing && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                handleFilesSelected(e.dataTransfer.files);
-              }
-            }}
-            className={`mb-6 border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center cursor-pointer hover:border-purple-400 hover:bg-purple-50/50 transition-colors relative ${isProcessing ? 'pointer-events-none' : ''}`}
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="w-12 h-12 text-purple-500 mx-auto mb-4 animate-spin" />
-                <p className="text-purple-600 font-medium mb-1">Processing images...</p>
-                <p className="text-slate-400 text-sm">Please wait</p>
-              </>
-            ) : (
-              <>
-                <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                <p className="text-slate-600 font-medium mb-1">Click to upload photos</p>
-                <p className="text-slate-400 text-sm">or drag and drop</p>
-              </>
-            )}
-          </div>
+          {/* Upload area - only show when no images */}
+          {images.length === 0 && (
+            <div 
+              onClick={() => !isProcessing && fileInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onDragEnter={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isProcessing && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                  handleFilesSelected(e.dataTransfer.files);
+                }
+              }}
+              className={`mb-6 border-2 border-dashed border-[#075056] bg-[#233038] rounded-2xl p-12 text-center cursor-pointer hover:border-[#FF5B04] transition-colors relative ${isProcessing ? 'pointer-events-none' : ''}`}
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-12 h-12 text-[#FF5B04] mx-auto mb-4 animate-spin" />
+                  <p className="text-[#FF5B04] font-medium mb-1">Processing images...</p>
+                  <p className="text-[#D3DBDD] text-sm">Please wait</p>
+                </>
+              ) : (
+                <>
+                  <Upload className="w-16 h-16 text-[#D3DBDD] mx-auto mb-4" />
+                  <p className="text-[#FDF6E3] font-medium text-lg mb-1">Click to upload photos</p>
+                  <p className="text-[#D3DBDD] text-sm">or drag and drop</p>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Image grid */}
           {images.length > 0 && (
             <div className="grid grid-cols-3 gap-3 mb-6">
               {images.map((image) => (
-                <div key={image.id} className="relative aspect-square rounded-xl overflow-hidden group">
+                <div key={image.id} className="relative aspect-square rounded-xl overflow-hidden group border border-[#075056]">
                   <img 
                     src={image.preview} 
                     alt="Travel memory"
@@ -217,26 +248,27 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
                       e.stopPropagation();
                       removeImage(image.id);
                     }}
-                    className="absolute top-1 right-1 p-1 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-1 right-1 p-1 bg-[#0F172A] rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#FF5B04]"
                   >
                     <X className="w-4 h-4 text-white" />
                   </button>
                   {/* Status badge */}
-                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent">
+                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-[#0F172A]/80">
                     {image.location ? (
-                      <p className="text-white text-xs truncate">
+                      <p className="text-[#F4D47C] text-xs truncate">
                         {image.location.type === 'city' 
                           ? `${image.location.name}, ${image.location.country}`
                           : image.location.country}
                       </p>
                     ) : (
-                      <p className="text-white/70 text-xs">Not tagged</p>
+                      <p className="text-[#D3DBDD] text-xs">Not tagged</p>
                     )}
                   </div>
-                  {/* Geo tag indicator */}
+                  {/* Location indicator */}
                   {image.geoTag && !image.location && (
-                    <div className="absolute top-1 left-1 px-2 py-0.5 bg-green-500 rounded-full">
-                      <p className="text-white text-[10px]">GPS</p>
+                    <div className="absolute top-1 left-1 px-2 py-0.5 bg-[#2563EB] rounded-full flex items-center gap-1">
+                      <MapPin className="w-3 h-3 text-white" />
+                      <p className="text-white text-[10px]">Location</p>
                     </div>
                   )}
                 </div>
@@ -245,40 +277,36 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
               <button
                 onClick={() => !isProcessing && fileInputRef.current?.click()}
                 disabled={isProcessing}
-                className="aspect-square rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center hover:border-purple-400 hover:bg-purple-50/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="aspect-square rounded-xl border-2 border-dashed border-[#075056] bg-[#233038] flex flex-col items-center justify-center hover:border-[#FF5B04] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
-                  <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+                  <Loader2 className="w-8 h-8 text-[#FF5B04] animate-spin" />
                 ) : (
                   <>
-                    <Plus className="w-8 h-8 text-slate-400" />
-                    <span className="text-xs text-slate-400 mt-1">Add more</span>
+                    <Plus className="w-8 h-8 text-[#D3DBDD]" />
+                    <span className="text-xs text-[#D3DBDD] mt-1">Add more</span>
                   </>
                 )}
               </button>
             </div>
           )}
 
-          {/* Empty state */}
-          {images.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                <ImageIcon className="w-10 h-10 text-slate-300" />
-              </div>
-              <p className="text-slate-400 text-lg">No photos added yet</p>
-              <p className="text-slate-400 text-sm">Upload your travel memories to get started</p>
+          {/* Empty state - only show when no images and not processing */}
+          {images.length === 0 && !isProcessing && (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <p className="text-[#D3DBDD] text-sm">Upload your travel memories to get started</p>
             </div>
           )}
         </div>
       </div>
 
       {/* Footer */}
-      <div className="p-4 bg-white border-t border-slate-200">
+      <div className="p-4 bg-[#233038] border-t border-[#075056]">
         <div className="max-w-lg mx-auto">
           <Button
             onClick={() => onNext(images)}
             disabled={images.length === 0 || isProcessing}
-            className="w-full h-12 rounded-xl bg-purple-500 hover:bg-purple-600 text-white font-medium"
+            className="w-full h-12 rounded-full bg-[#FF5B04] hover:bg-[#E54F03] text-white font-medium disabled:bg-[#233038] disabled:text-[#D3DBDD] transition-colors"
           >
             {isProcessing ? (
               <>

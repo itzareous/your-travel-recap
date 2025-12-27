@@ -3,10 +3,11 @@ import { TravelRecapData, TravelDestination, TravelImage, UserProfile } from "./
 import WelcomeScreen from "./WelcomeScreen";
 import ProfileSetup from "./ProfileSetup";
 import ImageUploader from "./ImageUploader";
+import TaggingIntro from "./TaggingIntro";
 import LocationTagger from "./LocationTagger";
 import RecapStory from "./RecapStory";
 
-type Step = 'welcome' | 'profile' | 'upload' | 'tag' | 'story';
+type Step = 'welcome' | 'profile' | 'upload' | 'tagging-intro' | 'tag' | 'story';
 
 export default function TravelRecapApp() {
   const [step, setStep] = useState<Step>('welcome');
@@ -24,7 +25,7 @@ export default function TravelRecapApp() {
 
   const handleImagesUploaded = (uploadedImages: TravelImage[]) => {
     setImages(uploadedImages);
-    setStep('tag');
+    setStep('tagging-intro');
   };
 
   const handleTaggingComplete = (destinations: TravelDestination[]) => {
@@ -42,8 +43,10 @@ export default function TravelRecapApp() {
     setStep('welcome');
   };
 
+  const geoTaggedCount = images.filter(img => img.geoTag).length;
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#0F172A] text-[#FDF6E3]">
       {step === 'welcome' && (
         <WelcomeScreen onStart={() => setStep('profile')} />
       )}
@@ -61,11 +64,19 @@ export default function TravelRecapApp() {
           initialImages={images}
         />
       )}
+      {step === 'tagging-intro' && (
+        <TaggingIntro
+          imageCount={images.length}
+          geoTaggedCount={geoTaggedCount}
+          onContinue={() => setStep('tag')}
+          onBack={() => setStep('upload')}
+        />
+      )}
       {step === 'tag' && (
         <LocationTagger
           images={images}
           onComplete={handleTaggingComplete}
-          onBack={() => setStep('upload')}
+          onBack={() => setStep('tagging-intro')}
         />
       )}
       {step === 'story' && (

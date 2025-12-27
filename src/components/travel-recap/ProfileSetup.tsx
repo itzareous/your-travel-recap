@@ -22,36 +22,36 @@ export default function ProfileSetup({ onNext, onBack, initialProfile }: Profile
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[#0F172A] flex flex-col">
       {/* Header */}
       <div className="p-4 flex items-center justify-between">
         <button 
           onClick={onBack}
-          className="p-2 hover:bg-slate-200 rounded-full transition-colors"
+          className="p-2 hover:bg-[#233038] rounded-full transition-colors"
         >
-          <ArrowLeft className="w-6 h-6 text-slate-600" />
+          <ArrowLeft className="w-6 h-6 text-[#D3DBDD]" />
         </button>
-        <span className="text-sm text-slate-500 font-medium">Step 1 of 4</span>
+        <span className="text-sm text-[#D3DBDD] font-medium">Step 1 of 4</span>
         <div className="w-10" />
       </div>
 
       {/* Progress bar */}
       <div className="px-6">
-        <div className="h-1 bg-slate-200 rounded-full overflow-hidden">
-          <div className="h-full w-1/3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" />
+        <div className="h-2 bg-[#233038] rounded-full overflow-hidden">
+          <div className="h-full w-1/4 bg-[#FF5B04] rounded-full" />
         </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 flex flex-col justify-center p-6 max-w-md mx-auto w-full">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full mb-4">
-            <User className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#075056] rounded-2xl mb-4">
+            <User className="w-8 h-8 text-[#FF5B04]" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">
+          <h2 className="text-3xl font-bold text-[#FDF6E3] mb-2">
             Let's personalize your recap
           </h2>
-          <p className="text-slate-500">
+          <p className="text-[#D3DBDD]">
             Add your username so friends can find you
           </p>
         </div>
@@ -59,18 +59,18 @@ export default function ProfileSetup({ onNext, onBack, initialProfile }: Profile
         <div className="space-y-6">
           {/* Platform Selection */}
           <div className="space-y-3">
-            <Label className="text-slate-700 font-medium">Choose your platform</Label>
+            <Label className="text-[#FDF6E3] font-medium">Choose your platform</Label>
             <div className="grid grid-cols-3 gap-3">
               <button
                 onClick={() => setPlatform('instagram')}
                 className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
                   platform === 'instagram' 
-                    ? 'border-pink-500 bg-pink-50' 
-                    : 'border-slate-200 hover:border-slate-300'
+                    ? 'border-[#FF5B04] bg-[#FF5B04] text-white' 
+                    : 'border-[#075056] bg-[#233038] text-[#D3DBDD] hover:border-[#FF5B04]'
                 }`}
               >
-                <Instagram className={`w-6 h-6 ${platform === 'instagram' ? 'text-pink-500' : 'text-slate-400'}`} />
-                <span className={`text-sm font-medium ${platform === 'instagram' ? 'text-pink-600' : 'text-slate-500'}`}>
+                <Instagram className={`w-6 h-6 ${platform === 'instagram' ? 'text-white' : 'text-[#D3DBDD]'}`} />
+                <span className="text-sm font-medium">
                   Instagram
                 </span>
               </button>
@@ -79,12 +79,12 @@ export default function ProfileSetup({ onNext, onBack, initialProfile }: Profile
                 onClick={() => setPlatform('twitter')}
                 className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
                   platform === 'twitter' 
-                    ? 'border-blue-500 bg-blue-50' 
-                    : 'border-slate-200 hover:border-slate-300'
+                    ? 'border-[#FF5B04] bg-[#FF5B04] text-white' 
+                    : 'border-[#075056] bg-[#233038] text-[#D3DBDD] hover:border-[#FF5B04]'
                 }`}
               >
-                <Twitter className={`w-6 h-6 ${platform === 'twitter' ? 'text-blue-500' : 'text-slate-400'}`} />
-                <span className={`text-sm font-medium ${platform === 'twitter' ? 'text-blue-600' : 'text-slate-500'}`}>
+                <Twitter className={`w-6 h-6 ${platform === 'twitter' ? 'text-white' : 'text-[#D3DBDD]'}`} />
+                <span className="text-sm font-medium">
                   X / Twitter
                 </span>
               </button>
@@ -93,12 +93,12 @@ export default function ProfileSetup({ onNext, onBack, initialProfile }: Profile
                 onClick={() => setPlatform('none')}
                 className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
                   platform === 'none' 
-                    ? 'border-slate-500 bg-slate-100' 
-                    : 'border-slate-200 hover:border-slate-300'
+                    ? 'border-[#FF5B04] bg-[#FF5B04] text-white' 
+                    : 'border-[#075056] bg-[#233038] text-[#D3DBDD] hover:border-[#FF5B04]'
                 }`}
               >
-                <User className={`w-6 h-6 ${platform === 'none' ? 'text-slate-600' : 'text-slate-400'}`} />
-                <span className={`text-sm font-medium ${platform === 'none' ? 'text-slate-700' : 'text-slate-500'}`}>
+                <User className={`w-6 h-6 ${platform === 'none' ? 'text-white' : 'text-[#D3DBDD]'}`} />
+                <span className="text-sm font-medium">
                   Just name
                 </span>
               </button>
@@ -107,19 +107,19 @@ export default function ProfileSetup({ onNext, onBack, initialProfile }: Profile
 
           {/* Username Input */}
           <div className="space-y-2">
-            <Label htmlFor="username" className="text-slate-700 font-medium">
+            <Label htmlFor="username" className="text-[#FDF6E3] font-medium">
               {platform === 'none' ? 'Your name' : 'Username'}
             </Label>
             <div className="relative">
               {platform !== 'none' && (
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">@</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D3DBDD]">@</span>
               )}
               <Input
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder={platform === 'none' ? 'Enter your name' : 'username'}
-                className={`h-14 text-lg rounded-xl border-slate-200 ${platform !== 'none' ? 'pl-9' : ''}`}
+                className={`h-14 text-lg rounded-xl bg-[#0F172A] border-[#075056] text-[#FDF6E3] placeholder:text-[#D3DBDD] focus:border-[#FF5B04] focus:ring-[#FF5B04] ${platform !== 'none' ? 'pl-9' : ''}`}
               />
             </div>
           </div>
@@ -131,7 +131,7 @@ export default function ProfileSetup({ onNext, onBack, initialProfile }: Profile
         <Button
           onClick={handleSubmit}
           disabled={!username.trim()}
-          className="w-full h-14 text-lg font-semibold rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:opacity-50"
+          className="w-full h-14 text-lg font-semibold rounded-full bg-[#FF5B04] hover:bg-[#E54F03] text-white disabled:bg-[#233038] disabled:text-[#D3DBDD] transition-colors"
         >
           Continue
           <ArrowRight className="w-5 h-5 ml-2" />

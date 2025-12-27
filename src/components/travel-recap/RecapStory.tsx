@@ -135,7 +135,7 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
     
     try {
       const canvas = await html2canvas(slideRef.current, {
-        backgroundColor: '#000000',
+        backgroundColor: '#0F172A',
         scale: 2,
         useCORS: true,
         allowTaint: true,
@@ -153,15 +153,15 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
   return (
     <div 
       ref={slideRef}
-      className="min-h-screen bg-black flex flex-col cursor-pointer select-none"
+      className="min-h-screen bg-[#0F172A] flex flex-col cursor-pointer select-none"
       onClick={handleTap}
     >
       {/* Progress bars */}
-      <div className="absolute top-0 left-0 right-0 z-20 p-2 flex gap-1">
+      <div className="absolute top-0 left-0 right-0 z-20 p-3 flex gap-1">
         {slides.map((_, i) => (
-          <div key={i} className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden">
+          <div key={i} className="flex-1 h-1 bg-[#233038] rounded-full overflow-hidden">
             <div 
-              className="h-full bg-white rounded-full transition-all duration-100"
+              className="h-full bg-[#FF5B04] rounded-full transition-all duration-100"
               style={{ 
                 width: i < currentSlideIndex ? '100%' : i === currentSlideIndex ? `${progress}%` : '0%' 
               }}
@@ -171,21 +171,21 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
       </div>
 
       {/* Header */}
-      <div className="absolute top-6 left-0 right-0 z-20 px-4 flex items-center justify-between">
+      <div className="absolute top-8 left-0 right-0 z-20 px-4 flex items-center justify-between">
         <button 
           onClick={(e) => { e.stopPropagation(); onBack(); }}
-          className="p-2 bg-black/30 backdrop-blur-sm rounded-full"
+          className="p-2 bg-[#233038] hover:bg-[#FF5B04] rounded-full transition-colors"
         >
-          <ArrowLeft className="w-5 h-5 text-white" />
+          <ArrowLeft className="w-5 h-5 text-[#FDF6E3]" />
         </button>
-        <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm rounded-full px-3 py-1">
-          <span className="text-white text-sm font-medium">@{data.profile.username}</span>
+        <div className="flex items-center gap-2 bg-[#233038] rounded-full px-4 py-2 border border-[#075056]">
+          <span className="text-[#FDF6E3] text-sm font-medium">@{data.profile.username}</span>
         </div>
         <button 
           onClick={(e) => { e.stopPropagation(); handleShare(); }}
-          className="p-2 bg-black/30 backdrop-blur-sm rounded-full"
+          className="p-2 bg-[#233038] hover:bg-[#FF5B04] rounded-full transition-colors"
         >
-          <Download className="w-5 h-5 text-white" />
+          <Download className="w-5 h-5 text-[#FDF6E3]" />
         </button>
       </div>
 
@@ -206,7 +206,7 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
       </div>
 
       {/* Navigation hints */}
-      <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-8 text-white/50 text-sm">
+      <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-8 text-[#D3DBDD] text-sm">
         <div className="flex items-center gap-1">
           <ChevronLeft className="w-4 h-4" />
           <span>Prev</span>
@@ -222,16 +222,19 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
 
 function IntroSlide({ profile, totalDestinations }: { profile: TravelRecapData['profile']; totalDestinations: number }) {
   return (
-    <div className="text-center text-white p-8">
-      <div className="mb-8 animate-bounce">
-        <Plane className="w-16 h-16 mx-auto text-purple-400" />
+    <div className="text-center text-[#FDF6E3] p-8">
+      <div className="mb-8">
+        <div className="w-20 h-20 bg-[#075056] rounded-2xl flex items-center justify-center mx-auto">
+          <Plane className="w-10 h-10 text-[#FF5B04]" />
+        </div>
       </div>
-      <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+      <h1 className="text-5xl font-bold mb-4 text-[#FDF6E3]">
         2025 Travel Recap
       </h1>
-      <p className="text-xl text-white/80 mb-6">@{profile.username}</p>
-      <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-6 py-3">
-        <MapPin className="w-5 h-5 text-purple-400" />
+      <div className="w-16 h-2 bg-[#FF5B04] mx-auto rounded-full mb-4" />
+      <p className="text-xl text-[#D3DBDD] mb-6">@{profile.username}</p>
+      <div className="inline-flex items-center gap-2 bg-[#233038] border border-[#075056] rounded-full px-6 py-3">
+        <MapPin className="w-5 h-5 text-[#2563EB]" />
         <span className="text-lg">{totalDestinations} destinations visited</span>
       </div>
     </div>
@@ -249,7 +252,7 @@ function DestinationSlide({ destination }: { destination: TravelDestination }) {
     
     const interval = setInterval(() => {
       setCurrentImageIndex(prev => (prev + 1) % images.length);
-    }, 1500); // Change image every 1.5 seconds
+    }, 1500);
     
     return () => clearInterval(interval);
   }, [images.length]);
@@ -262,17 +265,17 @@ function DestinationSlide({ destination }: { destination: TravelDestination }) {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-8">
       {images.length > 0 ? (
-        <div className="relative w-full max-w-sm aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl">
+        <div className="relative w-full max-w-sm aspect-[3/4] rounded-2xl overflow-hidden border border-[#075056]">
           <img 
             src={images[currentImageIndex]} 
             alt={displayName}
             className="w-full h-full object-cover transition-opacity duration-300"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/90 via-transparent to-transparent" />
           
           {/* Image counter badge if multiple images */}
           {images.length > 1 && (
-            <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">
+            <div className="absolute top-4 right-4 bg-[#FF5B04] px-3 py-1 rounded-full">
               <span className="text-white text-sm font-medium">
                 {currentImageIndex + 1} / {images.length}
               </span>
@@ -281,14 +284,14 @@ function DestinationSlide({ destination }: { destination: TravelDestination }) {
           
           <div className="absolute bottom-0 left-0 right-0 p-6">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#FF5B04] rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-sm">{destination.visitOrder}</span>
               </div>
-              <span className="text-white/60 text-sm">Stop #{destination.visitOrder}</span>
+              <span className="text-[#D3DBDD] text-sm">Stop #{destination.visitOrder}</span>
             </div>
-            <h2 className="text-3xl font-bold text-white">{displayName}</h2>
+            <h2 className="text-3xl font-bold text-[#FDF6E3]">{displayName}</h2>
             {images.length > 1 && (
-              <p className="text-white/60 text-sm mt-1">
+              <p className="text-[#F4D47C] text-sm mt-1">
                 {images.length} memories from this place
               </p>
             )}
@@ -297,8 +300,8 @@ function DestinationSlide({ destination }: { destination: TravelDestination }) {
       ) : (
         <div className="text-center">
           <StampCard destination={destination} size="lg" isActive />
-          <h2 className="text-2xl font-bold text-white mt-6">{displayName}</h2>
-          <p className="text-white/60">Stop #{destination.visitOrder}</p>
+          <h2 className="text-2xl font-bold text-[#FDF6E3] mt-6">{displayName}</h2>
+          <p className="text-[#D3DBDD]">Stop #{destination.visitOrder}</p>
         </div>
       )}
     </div>
@@ -310,40 +313,40 @@ function JourneySlide({ from, to }: { from: TravelDestination; to: TravelDestina
   const toName = getDestinationDisplayName(to);
   
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-8 text-white">
+    <div className="w-full h-full flex flex-col items-center justify-center p-8 text-[#FDF6E3]">
       <div className="flex items-center gap-4 mb-8">
         <div className="text-center">
-          <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-2">
-            <MapPin className="w-8 h-8 text-blue-400" />
+          <div className="w-16 h-16 bg-[#233038] border border-[#075056] rounded-2xl flex items-center justify-center mb-2">
+            <MapPin className="w-8 h-8 text-[#2563EB]" />
           </div>
-          <p className="text-sm text-white/60">From</p>
+          <p className="text-sm text-[#D3DBDD]">From</p>
           <p className="font-semibold">{fromName}</p>
         </div>
         
-        <div className="flex-1 relative h-1 bg-white/20 rounded-full max-w-32">
-          <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-pulse" style={{ width: '100%' }} />
-          <Plane className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2 w-6 h-6 text-purple-400 animate-bounce" />
+        <div className="flex-1 relative h-1 bg-[#233038] rounded-full max-w-32">
+          <div className="absolute inset-y-0 left-0 bg-[#FF5B04] rounded-full animate-pulse" style={{ width: '100%' }} />
+          <Plane className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2 w-6 h-6 text-[#FF5B04] animate-bounce" />
         </div>
         
         <div className="text-center">
-          <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-2">
-            <MapPin className="w-8 h-8 text-purple-400" />
+          <div className="w-16 h-16 bg-[#233038] border border-[#075056] rounded-2xl flex items-center justify-center mb-2">
+            <MapPin className="w-8 h-8 text-[#FF5B04]" />
           </div>
-          <p className="text-sm text-white/60">To</p>
+          <p className="text-sm text-[#D3DBDD]">To</p>
           <p className="font-semibold">{toName}</p>
         </div>
       </div>
       
-      <p className="text-white/40 text-sm">Next destination...</p>
+      <p className="text-[#D3DBDD] text-sm">Next destination...</p>
     </div>
   );
 }
 
 function SummarySlide({ data, onShare, onRestart }: { data: TravelRecapData; onShare: () => void; onRestart: () => void }) {
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-6 text-white" onClick={(e) => e.stopPropagation()}>
-      <h2 className="text-2xl font-bold mb-2">Your 2025 Journey</h2>
-      <p className="text-white/60 mb-6">@{data.profile.username}</p>
+    <div className="w-full h-full flex flex-col items-center justify-center p-6 text-[#FDF6E3]" onClick={(e) => e.stopPropagation()}>
+      <h2 className="text-3xl font-bold mb-2">Your 2025 Journey</h2>
+      <p className="text-[#D3DBDD] mb-6">@{data.profile.username}</p>
       
       {/* Stamp collection preview */}
       {data.destinations.length > 0 ? (
@@ -352,30 +355,30 @@ function SummarySlide({ data, onShare, onRestart }: { data: TravelRecapData; onS
             <StampCard key={dest.id} destination={dest} size="sm" />
           ))}
           {data.destinations.length > 6 && (
-            <div className="w-24 h-28 bg-white/10 rounded-lg flex items-center justify-center">
-              <span className="text-white/60">+{data.destinations.length - 6} more</span>
+            <div className="w-24 h-28 bg-[#233038] border border-[#075056] rounded-lg flex items-center justify-center">
+              <span className="text-[#D3DBDD]">+{data.destinations.length - 6} more</span>
             </div>
           )}
         </div>
       ) : (
         <div className="mb-8 text-center">
-          <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <MapPin className="w-10 h-10 text-white/40" />
+          <div className="w-20 h-20 bg-[#233038] rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <MapPin className="w-10 h-10 text-[#D3DBDD]" />
           </div>
-          <p className="text-white/60">No destinations tagged yet</p>
-          <p className="text-white/40 text-sm">Go back and tag your travel photos!</p>
+          <p className="text-[#D3DBDD]">No destinations tagged yet</p>
+          <p className="text-[#D3DBDD] text-sm opacity-70">Go back and tag your travel photos!</p>
         </div>
       )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 mb-8 w-full max-w-xs">
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
-          <p className="text-3xl font-bold text-purple-400">{data.destinations.length}</p>
-          <p className="text-sm text-white/60">Destinations</p>
+        <div className="bg-[#233038] border border-[#075056] rounded-xl p-4 text-center">
+          <p className="text-3xl font-bold text-[#FF5B04]">{data.destinations.length}</p>
+          <p className="text-sm text-[#D3DBDD]">Destinations</p>
         </div>
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
-          <p className="text-3xl font-bold text-blue-400">2025</p>
-          <p className="text-sm text-white/60">Year</p>
+        <div className="bg-[#233038] border border-[#075056] rounded-xl p-4 text-center">
+          <p className="text-3xl font-bold text-[#2563EB]">2025</p>
+          <p className="text-sm text-[#D3DBDD]">Year</p>
         </div>
       </div>
 
@@ -384,7 +387,7 @@ function SummarySlide({ data, onShare, onRestart }: { data: TravelRecapData; onS
         <Button 
           onClick={onShare}
           disabled={data.destinations.length === 0}
-          className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl font-semibold disabled:opacity-50"
+          className="w-full h-12 bg-[#FF5B04] hover:bg-[#E54F03] rounded-full font-semibold disabled:bg-[#233038] disabled:text-[#D3DBDD] transition-colors"
         >
           <Download className="w-5 h-5 mr-2" />
           Download My Recap
@@ -392,7 +395,7 @@ function SummarySlide({ data, onShare, onRestart }: { data: TravelRecapData; onS
         <Button 
           onClick={onRestart}
           variant="outline"
-          className="w-full h-12 border-white/20 text-white hover:bg-white/10 rounded-xl font-semibold"
+          className="w-full h-12 border-2 border-[#D3DBDD] text-[#D3DBDD] hover:border-[#FF5B04] hover:text-[#FF5B04] bg-transparent rounded-full font-semibold transition-colors"
         >
           Create Another
         </Button>

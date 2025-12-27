@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TravelImage, TravelDestination, COUNTRIES } from "./types";
-import { ArrowLeft, ArrowRight, Globe, Building2, Check, SkipForward, ChevronDown, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, Globe, Building2, Check, ChevronDown, Search } from "lucide-react";
 
 interface LocationTaggerProps {
   images: TravelImage[];
@@ -24,7 +24,10 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
   const hasSuggestion = currentImage?.geoTag?.suggestedCity || currentImage?.geoTag?.suggestedCountry;
   
   const taggedCount = taggedImages.filter(img => img.location).length;
-  const skippedCount = taggedImages.filter(img => !img.location).length;
+  const [error, setError] = useState<string | null>(null);
+
+  // Check if current image has been tagged
+  const isCurrentImageTagged = currentImage?.location !== undefined;
 
   const filteredCountries = useMemo(() => {
     if (!countrySearch) return COUNTRIES;
@@ -43,9 +46,16 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
   };
 
   const saveLocation = () => {
-    if (locationType === 'country' && !selectedCountry) return;
-    if (locationType === 'city' && (!cityName.trim() || !selectedCountry)) return;
+    if (locationType === 'country' && !selectedCountry) {
+      setError('Please select a country');
+      return;
+    }
+    if (locationType === 'city' && (!cityName.trim() || !selectedCountry)) {
+      setError('Please enter city name and select a country');
+      return;
+    }
 
+    setError(null);
     const updatedImages = [...taggedImages];
     updatedImages[currentIndex] = {
       ...currentImage,
@@ -76,11 +86,8 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
     goToNext();
   };
 
-  const skipImage = () => {
-    goToNext();
-  };
-
   const goToNext = () => {
+    setError(null);
     resetForm();
     if (currentIndex < taggedImages.length - 1) {
       setCurrentIndex(currentIndex + 1);
@@ -163,18 +170,18 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
 
   if (currentIndex >= taggedImages.length) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-[#0F172A] flex flex-col items-center justify-center p-4">
         <div className="text-center">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check className="w-10 h-10 text-green-600" />
+          <div className="w-20 h-20 bg-[#075056] rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Check className="w-10 h-10 text-[#2563EB]" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">All done!</h2>
-          <p className="text-slate-500 mb-6">
-            {taggedCount} images tagged, {skippedCount} skipped
+          <h2 className="text-3xl font-bold text-[#FDF6E3] mb-2">All done!</h2>
+          <p className="text-[#D3DBDD] mb-6">
+            {taggedCount} images tagged
           </p>
           <Button
             onClick={generateDestinations}
-            className="h-12 px-8 rounded-xl bg-purple-500 hover:bg-purple-600 text-white font-medium"
+            className="h-12 px-8 rounded-full bg-[#FF5B04] hover:bg-[#E54F03] text-white font-medium transition-colors"
           >
             Generate My Recap
             <ArrowRight className="w-5 h-5 ml-2" />
@@ -185,16 +192,23 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[#0F172A] flex flex-col">
       <div className="p-4 flex items-center justify-between">
         <button 
           onClick={onBack}
-          className="p-2 hover:bg-slate-200 rounded-full transition-colors"
+          className="p-2 hover:bg-[#233038] rounded-full transition-colors"
         >
-          <ArrowLeft className="w-6 h-6 text-slate-600" />
+          <ArrowLeft className="w-6 h-6 text-[#D3DBDD]" />
         </button>
-        <span className="text-sm text-slate-500">Step 3 of 4 • Image {currentIndex + 1} of {taggedImages.length}</span>
+        <span className="text-sm text-[#D3DBDD]">Step 4 of 4 • Image {currentIndex + 1} of {taggedImages.length}</span>
         <div className="w-10" />
+      </div>
+
+      {/* Progress bar */}
+      <div className="px-6 mb-4">
+        <div className="h-2 bg-[#233038] rounded-full overflow-hidden">
+          <div className="h-full bg-[#FF5B04] rounded-full transition-all" style={{ width: `${((currentIndex + 1) / taggedImages.length) * 100}%` }} />
+        </div>
       </div>
 
       <div className="px-4 mb-4">
@@ -202,12 +216,12 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
           {taggedImages.map((img, i) => (
             <div 
               key={img.id}
-              className={`h-1.5 rounded-full transition-all ${
+              className={`h-2 rounded-full transition-all ${
                 i === currentIndex 
-                  ? 'w-6 bg-purple-500' 
+                  ? 'w-6 bg-[#FF5B04]' 
                   : i < currentIndex 
-                    ? img.location ? 'w-1.5 bg-green-500' : 'w-1.5 bg-slate-300'
-                    : 'w-1.5 bg-slate-200'
+                    ? img.location ? 'w-2 bg-[#2563EB]' : 'w-2 bg-[#233038]'
+                    : 'w-2 bg-[#233038]'
               }`}
             />
           ))}
@@ -216,7 +230,7 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
 
       <div className="flex-1 px-4 pb-4 overflow-y-auto">
         <div className="max-w-lg mx-auto">
-          <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-6 shadow-lg">
+          <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-6 border border-[#075056]">
             <img 
               src={currentImage.preview} 
               alt="Travel memory"
@@ -225,10 +239,10 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
           </div>
 
           {hasSuggestion && showSuggestion && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
-              <p className="text-sm text-green-700 mb-3">
+            <div className="mb-6 p-4 bg-[#075056] border-l-4 border-[#F4D47C] rounded-xl">
+              <p className="text-sm text-[#FDF6E3] mb-3">
                 📍 We detected this might be from{' '}
-                <strong>
+                <strong className="text-[#F4D47C]">
                   {currentImage.geoTag?.suggestedCity 
                     ? `${currentImage.geoTag.suggestedCity}, ${currentImage.geoTag.suggestedCountry}`
                     : currentImage.geoTag?.suggestedCountry}
@@ -237,7 +251,7 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
               <div className="flex gap-2">
                 <Button
                   onClick={confirmSuggestion}
-                  className="flex-1 h-10 rounded-xl bg-green-600 hover:bg-green-700 text-white"
+                  className="flex-1 h-10 rounded-full bg-[#2563EB] hover:bg-[#1E40AF] text-white transition-colors"
                 >
                   <Check className="w-4 h-4 mr-2" />
                   Confirm
@@ -245,13 +259,12 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
                 <Button
                   onClick={() => {
                     setShowSuggestion(false);
-                    // Pre-fill country from suggestion
                     if (currentImage.geoTag?.suggestedCountry) {
                       setSelectedCountry(currentImage.geoTag.suggestedCountry);
                     }
                   }}
                   variant="outline"
-                  className="flex-1 h-10 rounded-xl"
+                  className="flex-1 h-10 rounded-full border-2 border-[#D3DBDD] text-[#D3DBDD] hover:border-[#FF5B04] hover:text-[#FF5B04] bg-transparent transition-colors"
                 >
                   Change Location
                 </Button>
@@ -261,15 +274,15 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
 
           {(!hasSuggestion || !showSuggestion) && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-slate-800">Where was this photo taken?</h3>
+              <h3 className="text-lg font-semibold text-[#FDF6E3]">Where was this photo taken?</h3>
               
               <div className="flex gap-2">
                 <button
                   onClick={() => setLocationType('city')}
-                  className={`flex-1 h-12 rounded-xl flex items-center justify-center gap-2 transition-colors ${
+                  className={`flex-1 h-12 rounded-full flex items-center justify-center gap-2 transition-colors ${
                     locationType === 'city' 
-                      ? 'bg-purple-500 text-white' 
-                      : 'border-2 border-slate-200 text-slate-600 hover:border-purple-400'
+                      ? 'bg-[#FF5B04] text-white' 
+                      : 'border-2 border-[#075056] bg-[#233038] text-[#D3DBDD] hover:border-[#FF5B04]'
                   }`}
                 >
                   <Building2 className="w-5 h-5" />
@@ -277,10 +290,10 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
                 </button>
                 <button
                   onClick={() => setLocationType('country')}
-                  className={`flex-1 h-12 rounded-xl flex items-center justify-center gap-2 transition-colors ${
+                  className={`flex-1 h-12 rounded-full flex items-center justify-center gap-2 transition-colors ${
                     locationType === 'country' 
-                      ? 'bg-purple-500 text-white' 
-                      : 'border-2 border-slate-200 text-slate-600 hover:border-purple-400'
+                      ? 'bg-[#FF5B04] text-white' 
+                      : 'border-2 border-[#075056] bg-[#233038] text-[#D3DBDD] hover:border-[#FF5B04]'
                   }`}
                 >
                   <Globe className="w-5 h-5" />
@@ -290,40 +303,40 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
 
               {locationType === 'city' && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-600 mb-2">City name</label>
+                  <label className="block text-sm font-medium text-[#D3DBDD] mb-2">City name</label>
                   <Input
                     value={cityName}
                     onChange={(e) => setCityName(e.target.value)}
                     placeholder="e.g., Lagos, New York, Paris"
-                    className="h-12 rounded-xl border-slate-200"
+                    className="h-12 rounded-xl bg-[#0F172A] border-[#075056] text-[#FDF6E3] placeholder:text-[#D3DBDD] focus:border-[#FF5B04]"
                   />
                 </div>
               )}
 
               <div className="relative">
-                <label className="block text-sm font-medium text-slate-600 mb-2">
+                <label className="block text-sm font-medium text-[#D3DBDD] mb-2">
                   {locationType === 'city' ? 'Country' : 'Select country'}
                 </label>
                 <button
                   onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                  className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-white flex items-center justify-between text-left"
+                  className="w-full h-12 px-4 rounded-xl border border-[#075056] bg-[#233038] flex items-center justify-between text-left hover:border-[#FF5B04] transition-colors"
                 >
-                  <span className={selectedCountry ? 'text-slate-800' : 'text-slate-400'}>
+                  <span className={selectedCountry ? 'text-[#FDF6E3]' : 'text-[#D3DBDD]'}>
                     {selectedCountry || 'Select a country'}
                   </span>
-                  <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${showCountryDropdown ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-5 h-5 text-[#D3DBDD] transition-transform ${showCountryDropdown ? 'rotate-180' : ''}`} />
                 </button>
                 
                 {showCountryDropdown && (
-                  <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white rounded-xl border border-slate-200 shadow-lg max-h-60 overflow-hidden">
-                    <div className="p-2 border-b border-slate-100">
+                  <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-[#233038] rounded-xl border border-[#075056] shadow-lg max-h-60 overflow-hidden">
+                    <div className="p-2 border-b border-[#075056]">
                       <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#D3DBDD]" />
                         <Input
                           value={countrySearch}
                           onChange={(e) => setCountrySearch(e.target.value)}
                           placeholder="Search countries..."
-                          className="h-10 pl-9 rounded-lg border-slate-200"
+                          className="h-10 pl-9 rounded-lg bg-[#0F172A] border-[#075056] text-[#FDF6E3] placeholder:text-[#D3DBDD] focus:border-[#FF5B04]"
                           autoFocus
                         />
                       </div>
@@ -337,8 +350,8 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
                             setShowCountryDropdown(false);
                             setCountrySearch("");
                           }}
-                          className={`w-full px-4 py-2.5 text-left hover:bg-slate-50 flex items-center gap-2 ${
-                            selectedCountry === country ? 'bg-purple-50 text-purple-700' : 'text-slate-700'
+                          className={`w-full px-4 py-2.5 text-left hover:bg-[#075056] flex items-center gap-2 transition-colors ${
+                            selectedCountry === country ? 'bg-[#FF5B04] text-white' : 'text-[#FDF6E3]'
                           }`}
                         >
                           {selectedCountry === country && <Check className="w-4 h-4" />}
@@ -346,7 +359,7 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
                         </button>
                       ))}
                       {filteredCountries.length === 0 && (
-                        <div className="px-4 py-3 text-slate-500 text-center">No countries found</div>
+                        <div className="px-4 py-3 text-[#D3DBDD] text-center">No countries found</div>
                       )}
                     </div>
                   </div>
@@ -357,25 +370,24 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
         </div>
       </div>
 
-      <div className="p-4 bg-white border-t border-slate-200">
-        <div className="max-w-lg mx-auto flex gap-3">
-          <Button
-            onClick={skipImage}
-            variant="outline"
-            className="flex-1 h-12 rounded-xl"
-          >
-            <SkipForward className="w-5 h-5 mr-2" />
-            Skip
-          </Button>
+      <div className="p-4 bg-[#233038] border-t border-[#075056]">
+        <div className="max-w-lg mx-auto">
+          {/* Error message */}
+          {error && (
+            <p className="text-[#FF5B04] text-sm mb-3 text-center">{error}</p>
+          )}
+          
+          {/* Only show Next button - no Skip */}
           <Button
             onClick={saveLocation}
             disabled={
-              (locationType === 'country' && !selectedCountry) ||
-              (locationType === 'city' && (!cityName.trim() || !selectedCountry))
+              (hasSuggestion && showSuggestion) || // User must confirm or change suggestion first
+              (!hasSuggestion && locationType === 'country' && !selectedCountry) ||
+              (!hasSuggestion && locationType === 'city' && (!cityName.trim() || !selectedCountry))
             }
-            className="flex-1 h-12 rounded-xl bg-purple-500 hover:bg-purple-600 text-white font-medium"
+            className="w-full h-12 rounded-full bg-[#FF5B04] hover:bg-[#E54F03] text-white font-medium disabled:bg-[#233038] disabled:text-[#D3DBDD] transition-colors"
           >
-            {isLastImage ? 'Finish' : 'Next'}
+            {isLastImage ? 'Generate Recap' : 'Next'}
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </div>
