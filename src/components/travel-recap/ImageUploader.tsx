@@ -20,20 +20,33 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
     let timestamp: number | undefined;
 
     try {
-      // Parse EXIF with both GPS and date fields
+      console.log(`Extracting EXIF from ${file.name}...`);
+      
+      // Parse EXIF - let exifr handle GPS conversion automatically
       const exifData = await exifr.parse(file, {
-        gps: true,
-        pick: ['latitude', 'longitude', 'DateTimeOriginal', 'CreateDate']
+        gps: true
+        // Don't use 'pick' - it blocks GPS extraction
       });
 
-      // Extract timestamp
+      console.log(`EXIF data for ${file.name}:`, exifData);
+
+      // Extract timestamp - handle both string and Date object
       if (exifData?.DateTimeOriginal || exifData?.CreateDate) {
-        const dateStr = exifData.DateTimeOriginal || exifData.CreateDate;
-        timestamp = new Date(dateStr).getTime();
+        const dateVal = exifData.DateTimeOriginal || exifData.CreateDate;
+        timestamp = dateVal instanceof Date ? dateVal.getTime() : new Date(dateVal).getTime();
+        console.log(`✓ Timestamp found: ${new Date(timestamp).toISOString()}`);
       }
 
       // Extract GPS data
       if (exifData?.latitude && exifData?.longitude) {
+        console.log(`✓ GPS found: ${exifData.latitude}, ${exifData.longitude}`);
+        
+        // Initialize geoTag with coordinates
+        geoTag = {
+          lat: exifData.latitude,
+          lng: exifData.longitude
+        };
+        
         // Try to reverse geocode with higher zoom for better city detection
         try {
           const response = await fetch(
@@ -46,6 +59,8 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
           );
           const data = await response.json();
           
+          console.log(`Geocoded ${file.name}:`, data);
+          
           // Extract city from various possible fields
           const suggestedCity = data.address?.city || 
                                data.address?.town || 
@@ -57,21 +72,19 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
           
           const suggestedCountry = data.address?.country;
           
-          geoTag = {
-            lat: exifData.latitude,
-            lng: exifData.longitude,
-            suggestedCity: suggestedCity || undefined,
-            suggestedCountry: suggestedCountry || undefined
-          };
-        } catch {
-          geoTag = {
-            lat: exifData.latitude,
-            lng: exifData.longitude
-          };
+          if (suggestedCity || suggestedCountry) {
+            geoTag.suggestedCity = suggestedCity || undefined;
+            geoTag.suggestedCountry = suggestedCountry || undefined;
+            console.log(`✓ Location: ${suggestedCity}, ${suggestedCountry}`);
+          }
+        } catch (geoError) {
+          console.error(`Geocoding failed for ${file.name}:`, geoError);
         }
+      } else {
+        console.log(`✗ No GPS data in ${file.name}`);
       }
-    } catch {
-      // No EXIF data or error reading it
+    } catch (exifError) {
+      console.error(`EXIF extraction failed for ${file.name}:`, exifError);
     }
 
     // Fallback to file lastModified if no EXIF timestamp
@@ -118,10 +131,11 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
           order: images.length + newImages.length + 1
         });
         
-        console.log(`  -> Added image ${newImages.length}`);
+        console.log(`  -> Added image ${newImages.length}, has geoTag: ${!!geoTag}`);
       }
       
       console.log(`Total new images to add: ${newImages.length}`);
+      console.log(`Images with GPS: ${newImages.filter(img => img.geoTag).length}`);
       
       if (newImages.length > 0) {
         setImages(prev => {
