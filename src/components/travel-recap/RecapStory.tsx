@@ -26,6 +26,78 @@ const QUARTER_NAMES: Record<QuarterKey, string> = {
   Q4: 'Year-End Journeys'
 };
 
+// Fun opening lines for personality
+const OPENING_LINES = [
+  "Your 2025 was a journey! 🌍",
+  "2025 flew by so faaaaast ✈️\nBut we caught the best moments",
+  "What a year it's been! 🎉",
+  "You really said 'let's travel' in 2025 ✨",
+  "Passport status: Very active 🔥",
+  "Plot twist: You became a travel icon ✈️",
+  "Adventure was your middle name 🗺️"
+];
+
+// Quarter context with fun facts
+const QUARTER_CONTEXT: Record<QuarterKey, { emoji: string; subtitle: string; vibe: string; funFacts: string[] }> = {
+  Q1: {
+    emoji: "🌸",
+    subtitle: "January - March",
+    vibe: "New year, new adventures!",
+    funFacts: [
+      "Started the year strong! 💪",
+      "Winter wanderlust activated ❄️",
+      "Fresh starts, fresh stamps ✨",
+      "New year, new places to explore 🚀"
+    ]
+  },
+  Q2: {
+    emoji: "☀️",
+    subtitle: "April - June",
+    vibe: "Spring into adventure mode",
+    funFacts: [
+      "Peak travel season energy! 🔥",
+      "You said 'summer? I'm ready' 😎",
+      "Vacation mode: ACTIVATED ✅",
+      "Spring fever hit different 🌷"
+    ]
+  },
+  Q3: {
+    emoji: "🏖️",
+    subtitle: "July - September",
+    vibe: "Summer adventures unlocked",
+    funFacts: [
+      "Living your best life! 🌴",
+      "Hot girl summer? More like hot TRAVEL summer 🔥",
+      "You really went off this quarter 🚀",
+      "Main character energy ✨"
+    ]
+  },
+  Q4: {
+    emoji: "🎄",
+    subtitle: "October - December",
+    vibe: "Year-end journeys",
+    funFacts: [
+      "Ended the year with a bang! 🎉",
+      "December travels hit different ✨",
+      "Saved the best for last? 👀",
+      "Holiday mode: Engaged 🎅"
+    ]
+  }
+};
+
+// Location-specific fun messages based on image count
+const getLocationMessage = (imageCount: number): string => {
+  if (imageCount === 1) return "One perfect moment 📸";
+  if (imageCount === 2) return "Twice as nice ✌️";
+  if (imageCount <= 3) return `${imageCount} memories captured ✨`;
+  if (imageCount <= 5) return `${imageCount} amazing shots! 🔥`;
+  if (imageCount <= 10) return `${imageCount} photos! You loved it here 😍`;
+  return `${imageCount} photos! Obsessed much? 📷💕`;
+};
+
+// Random helper
+const getRandomItem = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
 export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps) {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -206,7 +278,7 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
       });
       
       const link = document.createElement('a');
-      link.download = `travel-recap-2025-${data.profile.username}.png`;
+      link.download = `stamped-recap-2025-${data.profile.username}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     } catch (err) {
@@ -294,79 +366,138 @@ type QuarterlyData = Record<QuarterKey, TravelDestination[]>;
 function IntroSlide({ profile, totalDestinations, quarterlyData }: { profile: TravelRecapData['profile']; totalDestinations: number; quarterlyData: QuarterlyData }) {
   // Count active quarters
   const activeQuarters = (['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).filter(q => quarterlyData[q].length > 0);
+  const totalPhotos = Object.values(quarterlyData).flat().reduce((sum, d) => sum + d.images.length, 0);
+  
+  // Use a consistent random opening (seeded by username)
+  const openingIndex = profile.username.length % OPENING_LINES.length;
+  const randomOpening = OPENING_LINES[openingIndex];
   
   return (
-    <div className="text-center text-[#FDF6E3] p-8">
-      <div className="mb-8">
-        <div className="w-20 h-20 bg-[#075056] rounded-2xl flex items-center justify-center mx-auto">
-          <Plane className="w-10 h-10 text-[#FF5B04]" />
-        </div>
-      </div>
-      <h1 className="text-5xl font-bold mb-4 text-[#FDF6E3]">
-        2025 Travel Recap
+    <div className="absolute inset-0 bg-[#0F172A] flex flex-col items-center justify-center p-8 text-center">
+      {/* Decorative emoji */}
+      <div className="text-8xl mb-6 animate-bounce">✈️</div>
+      
+      {/* Fun opening line */}
+      <p className="text-[#D3DBDD] text-xl mb-4 text-center whitespace-pre-line">
+        {randomOpening}
+      </p>
+      
+      {/* Main title */}
+      <h1 className="text-5xl font-bold text-[#FDF6E3] mb-2">
+        Your 2025 Stamped Recap
       </h1>
-      <div className="w-16 h-2 bg-[#FF5B04] mx-auto rounded-full mb-4" />
-      <p className="text-xl text-[#D3DBDD] mb-6">@{profile.username}</p>
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
-        <div className="inline-flex items-center gap-2 bg-[#233038] border border-[#075056] rounded-full px-6 py-3">
-          <MapPin className="w-5 h-5 text-[#2563EB]" />
-          <span className="text-lg">{totalDestinations} destinations</span>
+      
+      {/* Username with flair */}
+      <p className="text-[#FF5B04] text-2xl mb-8 font-medium">@{profile.username}</p>
+      
+      {/* Stats cards */}
+      <div className="grid grid-cols-2 gap-4 w-full max-w-md mb-6">
+        <div className="bg-[#233038] rounded-xl p-6 text-center border border-[#075056] hover:border-[#FF5B04] transition-colors">
+          <div className="text-4xl mb-2">🏆</div>
+          <div className="text-[#FF5B04] text-3xl font-bold">{totalDestinations}</div>
+          <div className="text-[#D3DBDD] text-sm">Destinations</div>
         </div>
-        {activeQuarters.length > 0 && (
-          <div className="inline-flex items-center gap-2 bg-[#233038] border border-[#075056] rounded-full px-6 py-3">
-            <Calendar className="w-5 h-5 text-[#F4D47C]" />
-            <span className="text-lg">{activeQuarters.length} {activeQuarters.length === 1 ? 'quarter' : 'quarters'}</span>
-          </div>
-        )}
+        
+        <div className="bg-[#233038] rounded-xl p-6 text-center border border-[#075056] hover:border-[#2563EB] transition-colors">
+          <div className="text-4xl mb-2">📅</div>
+          <div className="text-[#2563EB] text-3xl font-bold">{activeQuarters.length}</div>
+          <div className="text-[#D3DBDD] text-sm">Quarters Active</div>
+        </div>
       </div>
-      {/* Quarter preview dots */}
-      <div className="flex justify-center gap-2 mt-4">
+      
+      {/* Quarter preview with enhanced styling */}
+      <div className="flex justify-center gap-3 mb-6">
         {(['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).map(q => (
           <div 
             key={q}
-            className={`px-3 py-1 rounded-full text-xs font-medium ${
+            className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
               quarterlyData[q].length > 0 
-                ? 'bg-[#FF5B04] text-white' 
-                : 'bg-[#233038] text-[#D3DBDD]'
+                ? 'bg-[#FF5B04] text-white shadow-lg shadow-[#FF5B04]/30' 
+                : 'bg-[#233038] text-[#D3DBDD] opacity-50'
             }`}
           >
-            {q}
+            {q} {quarterlyData[q].length > 0 && `(${quarterlyData[q].length})`}
           </div>
         ))}
       </div>
+      
+      {/* Fun fact */}
+      <p className="text-[#F4D47C] text-sm mt-2 text-center italic">
+        {totalDestinations > 0 
+          ? `That's ${totalDestinations} stamps in your passport! 📮 ${totalPhotos > 0 ? `• ${totalPhotos} memories captured 📸` : ''}`
+          : "Ready to add some stamps? 📮"
+        }
+      </p>
     </div>
   );
 }
 
 function QuarterIntroSlide({ quarter, quarterName, count, destinations }: { quarter: QuarterKey; quarterName: string; count: number; destinations: TravelDestination[] }) {
+  const info = QUARTER_CONTEXT[quarter];
+  const randomFact = getRandomItem(info.funFacts);
+  
+  // Calculate total photos for this quarter
+  const photoCount = destinations.reduce((sum, dest) => sum + dest.images.length, 0);
+  
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-8 text-[#FDF6E3]">
+    <div className="absolute inset-0 bg-gradient-to-br from-[#0F172A] to-[#233038] flex flex-col items-center justify-center p-8 text-[#FDF6E3]">
+      {/* Large emoji */}
+      <div className="text-8xl mb-4">{info.emoji}</div>
+      
       {/* Quarter badge */}
-      <div className="bg-[#FF5B04] text-white px-6 py-2 rounded-full text-sm font-semibold mb-6">
+      <div className="bg-[#FF5B04] text-white px-6 py-2 rounded-full font-bold mb-4 shadow-lg shadow-[#FF5B04]/30">
         {quarter}
       </div>
       
+      {/* Subtitle */}
+      <p className="text-[#D3DBDD] text-lg mb-2">{info.subtitle}</p>
+      
       {/* Title */}
-      <h2 className="text-4xl font-bold text-[#FDF6E3] mb-4 text-center">
+      <h2 className="text-4xl font-bold text-[#FDF6E3] mb-3 text-center">
         {quarterName}
       </h2>
       
-      {/* Count */}
-      <p className="text-[#D3DBDD] text-lg mb-8">
-        {count} {count === 1 ? 'place' : 'places'} visited
+      {/* Fun fact */}
+      <p className="text-[#F4D47C] text-xl mb-8 text-center font-medium">
+        {randomFact}
       </p>
       
-      {/* Location list */}
+      {/* Stats */}
+      <div className="flex gap-8 mb-8">
+        <div className="text-center">
+          <div className="text-[#FF5B04] text-5xl font-bold">{count}</div>
+          <div className="text-[#D3DBDD] text-sm">
+            {count === 1 ? 'Place' : 'Places'}
+          </div>
+        </div>
+        
+        {photoCount > 0 && (
+          <div className="text-center">
+            <div className="text-[#2563EB] text-5xl font-bold">{photoCount}</div>
+            <div className="text-[#D3DBDD] text-sm">
+              {photoCount === 1 ? 'Memory' : 'Memories'}
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Destination chips with enhanced styling */}
       <div className="flex flex-wrap gap-3 justify-center max-w-2xl">
-        {destinations.map((dest) => (
+        {destinations.map((dest, idx) => (
           <div
             key={dest.id}
-            className="bg-[#233038] border border-[#075056] px-4 py-2 rounded-full text-[#FDF6E3]"
+            className="bg-[#075056] border-2 border-[#F4D47C] px-4 py-2 rounded-full text-[#FDF6E3] flex items-center gap-2 hover:scale-105 transition-transform"
           >
-            {dest.type === 'city' 
-              ? `${dest.name}, ${dest.country}`
-              : dest.name
-            }
+            <span>📍</span>
+            <span>
+              {dest.type === 'city' 
+                ? `${dest.name}, ${dest.country}`
+                : dest.name
+              }
+            </span>
+            {dest.images.length > 0 && (
+              <span className="text-[#F4D47C] text-xs">({dest.images.length}📸)</span>
+            )}
           </div>
         ))}
       </div>
@@ -378,6 +509,15 @@ function DestinationSlide({ destination, quarter }: { destination: TravelDestina
   const displayName = getDestinationDisplayName(destination);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { images } = destination;
+  
+  // Get month name from earliest timestamp
+  const getMonthName = () => {
+    if (destination.earliestTimestamp) {
+      return new Date(destination.earliestTimestamp).toLocaleString('default', { month: 'long' });
+    }
+    return null;
+  };
+  const monthName = getMonthName();
   
   // Cycle through images if multiple
   useEffect(() => {
@@ -395,47 +535,85 @@ function DestinationSlide({ destination, quarter }: { destination: TravelDestina
     setCurrentImageIndex(0);
   }, [destination.id]);
   
+  const locationMessage = getLocationMessage(images.length);
+  
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-8">
+    <div className="absolute inset-0 bg-black flex flex-col items-center justify-center">
       {images.length > 0 ? (
-        <div className="relative w-full max-w-sm aspect-[3/4] rounded-2xl overflow-hidden border border-[#075056]">
+        <div className="relative w-full h-full">
+          {/* Full-screen image */}
           <img 
             src={images[currentImageIndex]} 
             alt={displayName}
-            className="w-full h-full object-cover transition-opacity duration-300"
+            className="w-full h-full object-cover transition-opacity duration-500"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/90 via-transparent to-transparent" />
           
-          {/* Quarter badge */}
-          <div className="absolute top-4 left-4 bg-[#2563EB] px-3 py-1 rounded-full">
-            <span className="text-white text-xs font-medium">{quarter}</span>
+          {/* Top badges */}
+          <div className="absolute top-20 left-6 right-6 flex justify-between items-start z-10">
+            {/* Quarter & Month badge */}
+            <div className="bg-[#FF5B04] text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 shadow-lg">
+              <span>{quarter}</span>
+              {monthName && (
+                <>
+                  <span>•</span>
+                  <span>{monthName}</span>
+                </>
+              )}
+            </div>
+            
+            {/* Image counter if multiple */}
+            {images.length > 1 && (
+              <div className="bg-black/60 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-bold">
+                {currentImageIndex + 1} / {images.length}
+              </div>
+            )}
           </div>
           
-          {/* Image counter badge if multiple images */}
-          {images.length > 1 && (
-            <div className="absolute top-4 right-4 bg-[#FF5B04] px-3 py-1 rounded-full">
-              <span className="text-white text-sm font-medium">
-                {currentImageIndex + 1} / {images.length}
-              </span>
+          {/* Bottom overlay with details */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/90 to-transparent p-8 pb-24">
+            {/* Location name */}
+            <h2 className="text-white text-4xl font-bold mb-2">
+              {destination.name}
+            </h2>
+            
+            {/* Country if city */}
+            {destination.type === 'city' && (
+              <p className="text-white/80 text-xl mb-4">{destination.country}</p>
+            )}
+            
+            {/* Fun message with accent bar */}
+            <div className="flex items-center gap-3 mb-3">
+              <div className="bg-[#FF5B04] w-2 h-8 rounded-full"></div>
+              <p className="text-white/90 text-lg font-medium">{locationMessage}</p>
             </div>
-          )}
-          
-          <div className="absolute bottom-0 left-0 right-0 p-6">
-            <h2 className="text-3xl font-bold text-[#FDF6E3]">{displayName}</h2>
-            {images.length > 1 && (
-              <p className="text-[#F4D47C] text-sm mt-1">
-                {images.length} memories from this place
+            
+            {/* Additional fun fact based on image count */}
+            {images.length >= 5 && (
+              <p className="text-[#F4D47C] text-sm italic mt-2">
+                This place clearly made an impression! 🌟
+              </p>
+            )}
+            {images.length >= 10 && (
+              <p className="text-[#FF5B04] text-sm font-bold mt-1">
+                Top destination of the year! 🏆
               </p>
             )}
           </div>
         </div>
       ) : (
-        <div className="text-center">
+        <div className="text-center p-8">
           <StampCard destination={destination} size="lg" isActive />
-          <h2 className="text-2xl font-bold text-[#FDF6E3] mt-6">{displayName}</h2>
-          <div className="inline-flex items-center gap-2 mt-2 bg-[#2563EB] px-3 py-1 rounded-full">
-            <span className="text-white text-xs font-medium">{quarter}</span>
+          <h2 className="text-3xl font-bold text-[#FDF6E3] mt-6">{displayName}</h2>
+          <div className="inline-flex items-center gap-2 mt-4 bg-[#FF5B04] px-4 py-2 rounded-full shadow-lg">
+            <span className="text-white font-medium">{quarter}</span>
+            {monthName && (
+              <>
+                <span className="text-white/60">•</span>
+                <span className="text-white font-medium">{monthName}</span>
+              </>
+            )}
           </div>
+          <p className="text-[#D3DBDD] mt-4 text-sm">No photos uploaded for this destination 📷</p>
         </div>
       )}
     </div>
@@ -445,80 +623,170 @@ function DestinationSlide({ destination, quarter }: { destination: TravelDestina
 function SummarySlide({ data, quarterlyData, onShare, onRestart }: { data: TravelRecapData; quarterlyData: QuarterlyData; onShare: () => void; onRestart: () => void }) {
   const activeQuarters = (['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).filter(q => quarterlyData[q].length > 0);
   
+  // Calculate interesting stats
+  const totalPhotos = data.destinations.reduce((sum, d) => sum + d.images.length, 0);
+  const countries = [...new Set(data.destinations.map(d => d.country))];
+  const cities = data.destinations.filter(d => d.type === 'city');
+  
+  // Find most visited place (most photos)
+  const mostVisited = data.destinations.length > 0 
+    ? data.destinations.reduce((max, d) => d.images.length > max.images.length ? d : max)
+    : null;
+  
+  // Find busiest quarter
+  const busiestQuarter = (['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[])
+    .filter(q => quarterlyData[q].length > 0)
+    .reduce((max, q) => quarterlyData[q].length > quarterlyData[max].length ? q : max, 'Q1' as QuarterKey);
+  
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-6 text-[#FDF6E3] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-      <h2 className="text-3xl font-bold mb-2">Your 2025 Journey</h2>
-      <p className="text-[#D3DBDD] mb-4">@{data.profile.username}</p>
-      
-      {/* Quarterly breakdown */}
-      {data.destinations.length > 0 && (
-        <div className="grid grid-cols-4 gap-2 mb-6 w-full max-w-sm">
-          {(['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).map(q => (
-            <div 
-              key={q}
-              className={`rounded-xl p-3 text-center ${
-                quarterlyData[q].length > 0 
-                  ? 'bg-[#FF5B04] text-white' 
-                  : 'bg-[#233038] text-[#D3DBDD]'
-              }`}
-            >
-              <p className="text-lg font-bold">{quarterlyData[q].length}</p>
-              <p className="text-xs">{q}</p>
-            </div>
-          ))}
-        </div>
-      )}
-      
-      {/* Stamp collection preview */}
-      {data.destinations.length > 0 ? (
-        <div className="flex flex-wrap justify-center gap-2 mb-6 max-w-sm">
-          {data.destinations.slice(0, 6).map((dest) => (
-            <StampCard key={dest.id} destination={dest} size="sm" />
-          ))}
-          {data.destinations.length > 6 && (
-            <div className="w-24 h-28 bg-[#233038] border border-[#075056] rounded-lg flex items-center justify-center">
-              <span className="text-[#D3DBDD]">+{data.destinations.length - 6} more</span>
-            </div>
+    <div className="absolute inset-0 bg-[#0F172A] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div className="p-6 pb-48">
+        {/* Header with personality */}
+        <div className="text-center mb-8">
+          <div className="text-6xl mb-4">🎉</div>
+          <h1 className="text-4xl font-bold text-[#FDF6E3] mb-2">
+            Your 2025 Journey
+          </h1>
+          <p className="text-[#FF5B04] text-xl font-medium">@{data.profile.username}</p>
+          <p className="text-[#D3DBDD] text-xs mt-1 opacity-70">Powered by Stamped Recap</p>
+          {data.destinations.length > 0 && (
+            <p className="text-[#D3DBDD] text-sm mt-2 italic">
+              What a year it's been! ✨
+            </p>
           )}
         </div>
-      ) : (
-        <div className="mb-6 text-center">
-          <div className="w-20 h-20 bg-[#233038] rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <MapPin className="w-10 h-10 text-[#D3DBDD]" />
+        
+        {data.destinations.length > 0 ? (
+          <>
+            {/* Main stats grid with emojis */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="bg-[#233038] rounded-2xl p-5 text-center border border-[#075056] hover:border-[#FF5B04] transition-colors">
+                <div className="text-4xl mb-2">🌍</div>
+                <div className="text-[#FF5B04] text-4xl font-bold">{data.destinations.length}</div>
+                <div className="text-[#D3DBDD] text-sm">Total Destinations</div>
+              </div>
+              
+              <div className="bg-[#233038] rounded-2xl p-5 text-center border border-[#075056] hover:border-[#2563EB] transition-colors">
+                <div className="text-4xl mb-2">📸</div>
+                <div className="text-[#2563EB] text-4xl font-bold">{totalPhotos}</div>
+                <div className="text-[#D3DBDD] text-sm">Memories Captured</div>
+              </div>
+              
+              <div className="bg-[#233038] rounded-2xl p-5 text-center border border-[#075056] hover:border-[#F4D47C] transition-colors">
+                <div className="text-4xl mb-2">🗺️</div>
+                <div className="text-[#F4D47C] text-4xl font-bold">{countries.length}</div>
+                <div className="text-[#D3DBDD] text-sm">{countries.length === 1 ? 'Country' : 'Countries'}</div>
+              </div>
+              
+              <div className="bg-[#233038] rounded-2xl p-5 text-center border border-[#075056] hover:border-[#075056] transition-colors">
+                <div className="text-4xl mb-2">🏙️</div>
+                <div className="text-[#075056] text-4xl font-bold">{cities.length}</div>
+                <div className="text-[#D3DBDD] text-sm">{cities.length === 1 ? 'City' : 'Cities'}</div>
+              </div>
+            </div>
+            
+            {/* Fun insights - Top Spot */}
+            {mostVisited && mostVisited.images.length > 0 && (
+              <div className="bg-gradient-to-r from-[#FF5B04] to-[#E54F03] rounded-2xl p-5 mb-4 shadow-lg">
+                <h3 className="text-white text-lg font-bold mb-2 flex items-center gap-2">
+                  <span>🏆</span> Your Top Spot
+                </h3>
+                <p className="text-white text-2xl font-bold">
+                  {mostVisited.type === 'city' 
+                    ? `${mostVisited.name}, ${mostVisited.country}`
+                    : mostVisited.name
+                  }
+                </p>
+                <p className="text-white/80 mt-2">
+                  {mostVisited.images.length} photos • You couldn't get enough! 😍
+                </p>
+              </div>
+            )}
+            
+            {/* Fun insights - Busiest Quarter */}
+            {activeQuarters.length > 0 && (
+              <div className="bg-gradient-to-r from-[#2563EB] to-[#1E40AF] rounded-2xl p-5 mb-6 shadow-lg">
+                <h3 className="text-white text-lg font-bold mb-2 flex items-center gap-2">
+                  <span>📅</span> Busiest Quarter
+                </h3>
+                <p className="text-white text-2xl font-bold">
+                  {busiestQuarter} - {QUARTER_NAMES[busiestQuarter]}
+                </p>
+                <p className="text-white/80 mt-2">
+                  {quarterlyData[busiestQuarter].length} destinations • You were on fire! 🔥
+                </p>
+              </div>
+            )}
+            
+            {/* Quarterly breakdown with enhanced styling */}
+            <h3 className="text-[#FDF6E3] text-xl font-bold mb-4 flex items-center gap-2">
+              <span>📊</span> Quarter by Quarter
+            </h3>
+            <div className="grid grid-cols-4 gap-3 mb-6">
+              {(['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).map(q => (
+                <div 
+                  key={q} 
+                  className={`rounded-xl p-4 text-center transition-all ${
+                    quarterlyData[q].length > 0 
+                      ? 'bg-[#FF5B04] text-white shadow-lg shadow-[#FF5B04]/20' 
+                      : 'bg-[#233038] text-[#D3DBDD] opacity-50'
+                  }`}
+                >
+                  <div className="text-3xl font-bold">{quarterlyData[q].length}</div>
+                  <div className="text-sm font-medium">{q}</div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Stamps collection */}
+            <h3 className="text-[#FDF6E3] text-xl font-bold mb-4 flex items-center gap-2">
+              <span>📮</span> Your Stamp Collection
+            </h3>
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              {data.destinations.map((dest) => (
+                <StampCard key={dest.id} destination={dest} />
+              ))}
+            </div>
+            
+            {/* Final message */}
+            <div className="bg-[#075056] border-l-4 border-[#F4D47C] rounded-lg p-5 text-center mb-6">
+              <p className="text-[#FDF6E3] text-xl mb-2">
+                What a year, @{data.profile.username}! 🎉
+              </p>
+              <p className="text-[#D3DBDD]">
+                Can't wait to see where 2026 takes you! ✈️✨
+              </p>
+            </div>
+          </>
+        ) : (
+          <div className="mb-6 text-center py-12">
+            <div className="text-6xl mb-4">🗺️</div>
+            <div className="w-20 h-20 bg-[#233038] rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <MapPin className="w-10 h-10 text-[#D3DBDD]" />
+            </div>
+            <p className="text-[#FDF6E3] text-xl font-bold mb-2">No destinations tagged yet</p>
+            <p className="text-[#D3DBDD] text-sm opacity-70">Go back and tag your travel photos!</p>
+            <p className="text-[#F4D47C] text-sm mt-4 italic">Your adventure awaits! ✨</p>
           </div>
-          <p className="text-[#D3DBDD]">No destinations tagged yet</p>
-          <p className="text-[#D3DBDD] text-sm opacity-70">Go back and tag your travel photos!</p>
-        </div>
-      )}
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 mb-6 w-full max-w-xs">
-        <div className="bg-[#233038] border border-[#075056] rounded-xl p-4 text-center">
-          <p className="text-3xl font-bold text-[#FF5B04]">{data.destinations.length}</p>
-          <p className="text-sm text-[#D3DBDD]">Destinations</p>
-        </div>
-        <div className="bg-[#233038] border border-[#075056] rounded-xl p-4 text-center">
-          <p className="text-3xl font-bold text-[#2563EB]">{activeQuarters.length}</p>
-          <p className="text-sm text-[#D3DBDD]">Quarters</p>
-        </div>
+        )}
       </div>
-
-      {/* Actions */}
-      <div className="flex flex-col gap-3 w-full max-w-xs">
+      
+      {/* Fixed bottom buttons */}
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#0F172A] via-[#0F172A] to-transparent p-6 pt-12 space-y-3">
         <Button 
           onClick={onShare}
           disabled={data.destinations.length === 0}
-          className="w-full h-12 bg-[#FF5B04] hover:bg-[#E54F03] rounded-full font-semibold disabled:bg-[#233038] disabled:text-[#D3DBDD] transition-colors"
+          className="w-full h-14 bg-[#FF5B04] hover:bg-[#E54F03] rounded-xl font-bold text-lg disabled:bg-[#233038] disabled:text-[#D3DBDD] transition-all shadow-lg shadow-[#FF5B04]/30 disabled:shadow-none"
         >
           <Download className="w-5 h-5 mr-2" />
-          Download My Recap
+          📥 Download My Recap
         </Button>
         <Button 
           onClick={onRestart}
           variant="outline"
-          className="w-full h-12 border-2 border-[#D3DBDD] text-[#D3DBDD] hover:border-[#FF5B04] hover:text-[#FF5B04] bg-transparent rounded-full font-semibold transition-colors"
+          className="w-full h-14 border-2 border-[#D3DBDD] text-[#D3DBDD] hover:border-[#FF5B04] hover:text-[#FF5B04] bg-transparent rounded-xl font-semibold text-lg transition-all"
         >
-          Create Another
+          Create Another ✨
         </Button>
       </div>
     </div>

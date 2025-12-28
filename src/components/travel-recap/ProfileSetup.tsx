@@ -49,7 +49,7 @@ export default function ProfileSetup({ onNext, onBack, initialProfile }: Profile
             <User className="w-8 h-8 text-[#FF5B04]" />
           </div>
           <h2 className="text-3xl font-bold text-[#FDF6E3] mb-2">
-            Let's personalize your recap
+            Let's personalize your Stamped Recap
           </h2>
           <p className="text-[#D3DBDD]">
             Add your username so friends can find you

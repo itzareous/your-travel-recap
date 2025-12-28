@@ -30,7 +30,7 @@ function Home() {
 
         {/* Title */}
         <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-          Travel Stamp
+          Stamped Recap
         </h1>
         
         <p className="text-xl text-slate-400 mb-12 max-w-md mx-auto">
@@ -46,7 +46,7 @@ function Home() {
             <div className="text-left">
               <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
                 <Sparkles className="w-6 h-6 text-yellow-400" />
-                2024 Travel Recap
+                Create Your Stamped Recap
               </h2>
               <p className="text-slate-400">
                 Create your personalized stamp collection of all the places you visited this year

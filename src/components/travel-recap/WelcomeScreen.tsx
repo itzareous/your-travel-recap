@@ -73,7 +73,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           className="w-full bg-[#FF5B04] hover:bg-[#E54F03] text-white font-semibold text-lg px-8 py-6 rounded-full transition-all duration-300 hover:scale-[1.02]"
         >
           <Sparkles className="w-5 h-5 mr-2" />
-          Start My 2025 Story
+          Create My Stamped Recap
           <ArrowRight className="w-5 h-5 ml-2" />
         </Button>
         
@@ -85,7 +85,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
 
       {/* Footer */}
       <div className="absolute bottom-6 text-center text-[#D3DBDD] text-sm opacity-50">
-        ✈️ Where did your adventures take you?
+        ✈️ Where did your adventures take you? | Stamped Recap 2025
       </div>
     </div>
   );
