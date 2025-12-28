@@ -52,7 +52,11 @@ export default function StampCard({ destination, isActive = false, size = 'md' }
               </>
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-[#075056]">
-                <span className="text-[#FDF6E3] text-2xl">{destination.type === 'city' ? '🏙️' : '🌍'}</span>
+                <img 
+                  src={destination.type === 'city' ? '/images/city-skyline.webp' : '/images/total-destinations.webp'} 
+                  alt={destination.type === 'city' ? 'City' : 'Globe'} 
+                  className="w-12 h-12 object-contain"
+                />
               </div>
             )}
 

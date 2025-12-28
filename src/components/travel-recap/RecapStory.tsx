@@ -37,10 +37,10 @@ const OPENING_LINES = [
   "Adventure was your middle name 🗺️"
 ];
 
-// Quarter context with fun facts
+// Quarter context with fun facts - using 3D images for seasonal emojis
 const QUARTER_CONTEXT: Record<QuarterKey, { emoji: string; subtitle: string; vibe: string; funFacts: string[] }> = {
   Q1: {
-    emoji: "🌸",
+    emoji: "/images/cherry-blossom.webp",
     subtitle: "January - March",
     vibe: "New year, new adventures!",
     funFacts: [
@@ -51,7 +51,7 @@ const QUARTER_CONTEXT: Record<QuarterKey, { emoji: string; subtitle: string; vib
     ]
   },
   Q2: {
-    emoji: "☀️",
+    emoji: "/images/sun.webp",
     subtitle: "April - June",
     vibe: "Spring into adventure mode",
     funFacts: [
@@ -62,7 +62,7 @@ const QUARTER_CONTEXT: Record<QuarterKey, { emoji: string; subtitle: string; vib
     ]
   },
   Q3: {
-    emoji: "🏖️",
+    emoji: "/images/beach.webp",
     subtitle: "July - September",
     vibe: "Summer adventures unlocked",
     funFacts: [
@@ -73,7 +73,7 @@ const QUARTER_CONTEXT: Record<QuarterKey, { emoji: string; subtitle: string; vib
     ]
   },
   Q4: {
-    emoji: "🎄",
+    emoji: "/images/christmas-tree.webp",
     subtitle: "October - December",
     vibe: "Year-end journeys",
     funFacts: [
@@ -374,8 +374,12 @@ function IntroSlide({ profile, totalDestinations, quarterlyData }: { profile: Tr
   
   return (
     <div className="absolute inset-0 bg-[#0B0101] flex flex-col items-center justify-center p-8 text-center">
-      {/* Decorative emoji */}
-      <div className="text-8xl mb-6 animate-bounce">✈️</div>
+      {/* Decorative 3D airplane */}
+      <img 
+        src="/images/airplane.webp" 
+        alt="Airplane" 
+        className="w-32 h-32 mb-6 animate-bounce object-contain"
+      />
       
       {/* Fun opening line */}
       <p className="text-[#D3DBDD] text-xl mb-4 text-center whitespace-pre-line">
@@ -393,13 +397,13 @@ function IntroSlide({ profile, totalDestinations, quarterlyData }: { profile: Tr
       {/* Stats cards */}
       <div className="grid grid-cols-2 gap-4 w-full max-w-md mb-6">
         <div className="bg-[#233038] rounded-xl p-6 text-center border border-[#075056] hover:border-[#FF5B04] transition-colors">
-          <div className="text-4xl mb-2">🏆</div>
+          <img src="/images/trophy.webp" alt="Trophy" className="w-12 h-12 mb-2 mx-auto object-contain" />
           <div className="text-[#FF5B04] text-3xl font-bold">{totalDestinations}</div>
           <div className="text-[#D3DBDD] text-sm">Destinations</div>
         </div>
         
         <div className="bg-[#233038] rounded-xl p-6 text-center border border-[#075056] hover:border-[#2563EB] transition-colors">
-          <div className="text-4xl mb-2">📅</div>
+          <img src="/images/calendar.webp" alt="Calendar" className="w-12 h-12 mb-2 mx-auto object-contain" />
           <div className="text-[#2563EB] text-3xl font-bold">{activeQuarters.length}</div>
           <div className="text-[#D3DBDD] text-sm">Quarters Active</div>
         </div>
@@ -424,8 +428,8 @@ function IntroSlide({ profile, totalDestinations, quarterlyData }: { profile: Tr
       {/* Fun fact */}
       <p className="text-[#F4D47C] text-sm mt-2 text-center italic">
         {totalDestinations > 0 
-          ? `That's ${totalDestinations} stamps in your passport! 📮 ${totalPhotos > 0 ? `• ${totalPhotos} memories captured 📸` : ''}`
-          : "Ready to add some stamps? 📮"
+          ? <span className="flex items-center justify-center gap-1">That's {totalDestinations} stamps in your passport! <img src="/images/stamp.webp" alt="Stamp" className="w-5 h-5 inline object-contain" /> {totalPhotos > 0 && <span>• {totalPhotos} memories captured <img src="/images/camera.webp" alt="Camera" className="w-5 h-5 inline object-contain" /></span>}</span>
+          : <span className="flex items-center justify-center gap-1">Ready to add some stamps? <img src="/images/stamp.webp" alt="Stamp" className="w-5 h-5 inline object-contain" /></span>
         }
       </p>
     </div>
@@ -441,8 +445,12 @@ function QuarterIntroSlide({ quarter, quarterName, count, destinations }: { quar
   
   return (
     <div className="absolute inset-0 bg-gradient-to-br from-[#0B0101] to-[#233038] flex flex-col items-center justify-center p-8 text-[#FDF6E3]">
-      {/* Large emoji */}
-      <div className="text-8xl mb-4">{info.emoji}</div>
+      {/* Large 3D seasonal image */}
+      <img 
+        src={info.emoji} 
+        alt={quarter} 
+        className="w-32 h-32 mb-4 object-contain mx-auto"
+      />
       
       {/* Quarter badge */}
       <div className="bg-[#FF5B04] text-white px-6 py-2 rounded-full font-bold mb-4 shadow-lg shadow-[#FF5B04]/30">
@@ -595,7 +603,7 @@ function DestinationSlide({ destination, quarter }: { destination: TravelDestina
             )}
             {images.length >= 10 && (
               <p className="text-[#FF5B04] text-sm font-bold mt-1">
-                Top destination of the year! 🏆
+                <span className="flex items-center gap-1">Top destination of the year! <img src="/images/trophy.webp" alt="Trophy" className="w-4 h-4 inline object-contain" /></span>
               </p>
             )}
           </div>
@@ -643,7 +651,11 @@ function SummarySlide({ data, quarterlyData, onShare, onRestart }: { data: Trave
       <div className="p-6 pb-48">
         {/* Header with personality */}
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">🎉</div>
+          <img 
+            src="/images/party-popper.webp" 
+            alt="Party Popper" 
+            className="w-24 h-24 mb-4 mx-auto object-contain"
+          />
           <h1 className="text-4xl font-bold text-[#FDF6E3] mb-2">
             Your 2025 Journey
           </h1>
@@ -661,25 +673,25 @@ function SummarySlide({ data, quarterlyData, onShare, onRestart }: { data: Trave
             {/* Main stats grid with emojis */}
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="bg-[#233038] rounded-2xl p-5 text-center border border-[#075056] hover:border-[#FF5B04] transition-colors">
-                <div className="text-4xl mb-2">🌍</div>
+                <img src="/images/total-destinations.webp" alt="Globe" className="w-12 h-12 mb-2 mx-auto object-contain" />
                 <div className="text-[#FF5B04] text-4xl font-bold">{data.destinations.length}</div>
                 <div className="text-[#D3DBDD] text-sm">Total Destinations</div>
               </div>
               
               <div className="bg-[#233038] rounded-2xl p-5 text-center border border-[#075056] hover:border-[#2563EB] transition-colors">
-                <div className="text-4xl mb-2">📸</div>
+                <img src="/images/camera.webp" alt="Camera" className="w-12 h-12 mb-2 mx-auto object-contain" />
                 <div className="text-[#2563EB] text-4xl font-bold">{totalPhotos}</div>
                 <div className="text-[#D3DBDD] text-sm">Memories Captured</div>
               </div>
               
               <div className="bg-[#233038] rounded-2xl p-5 text-center border border-[#075056] hover:border-[#F4D47C] transition-colors">
-                <div className="text-4xl mb-2">🗺️</div>
+                <img src="/images/world-map.webp" alt="World Map" className="w-12 h-12 mb-2 mx-auto object-contain" />
                 <div className="text-[#F4D47C] text-4xl font-bold">{countries.length}</div>
                 <div className="text-[#D3DBDD] text-sm">{countries.length === 1 ? 'Country' : 'Countries'}</div>
               </div>
               
               <div className="bg-[#233038] rounded-2xl p-5 text-center border border-[#075056] hover:border-[#075056] transition-colors">
-                <div className="text-4xl mb-2">🏙️</div>
+                <img src="/images/city-skyline.webp" alt="City Skyline" className="w-12 h-12 mb-2 mx-auto object-contain" />
                 <div className="text-[#075056] text-4xl font-bold">{cities.length}</div>
                 <div className="text-[#D3DBDD] text-sm">{cities.length === 1 ? 'City' : 'Cities'}</div>
               </div>
@@ -689,7 +701,7 @@ function SummarySlide({ data, quarterlyData, onShare, onRestart }: { data: Trave
             {mostVisited && mostVisited.images.length > 0 && (
               <div className="bg-gradient-to-r from-[#FF5B04] to-[#E54F03] rounded-2xl p-5 mb-4 shadow-lg">
                 <h3 className="text-white text-lg font-bold mb-2 flex items-center gap-2">
-                  <span>🏆</span> Your Top Spot
+                  <img src="/images/trophy.webp" alt="Trophy" className="w-6 h-6 object-contain" /> Your Top Spot
                 </h3>
                 <p className="text-white text-2xl font-bold">
                   {mostVisited.type === 'city' 
@@ -707,7 +719,7 @@ function SummarySlide({ data, quarterlyData, onShare, onRestart }: { data: Trave
             {activeQuarters.length > 0 && (
               <div className="bg-gradient-to-r from-[#2563EB] to-[#1E40AF] rounded-2xl p-5 mb-6 shadow-lg">
                 <h3 className="text-white text-lg font-bold mb-2 flex items-center gap-2">
-                  <span>📅</span> Busiest Quarter
+                  <img src="/images/calendar.webp" alt="Calendar" className="w-6 h-6 object-contain" /> Busiest Quarter
                 </h3>
                 <p className="text-white text-2xl font-bold">
                   {busiestQuarter} - {QUARTER_NAMES[busiestQuarter]}
@@ -720,7 +732,7 @@ function SummarySlide({ data, quarterlyData, onShare, onRestart }: { data: Trave
             
             {/* Quarterly breakdown with enhanced styling */}
             <h3 className="text-[#FDF6E3] text-xl font-bold mb-4 flex items-center gap-2">
-              <span>📊</span> Quarter by Quarter
+              <img src="/images/chart.webp" alt="Chart" className="w-6 h-6 object-contain" /> Quarter by Quarter
             </h3>
             <div className="grid grid-cols-4 gap-3 mb-6">
               {(['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).map(q => (
@@ -740,7 +752,7 @@ function SummarySlide({ data, quarterlyData, onShare, onRestart }: { data: Trave
             
             {/* Stamps collection */}
             <h3 className="text-[#FDF6E3] text-xl font-bold mb-4 flex items-center gap-2">
-              <span>📮</span> Your Stamp Collection
+              <img src="/images/stamp.webp" alt="Stamp" className="w-6 h-6 object-contain" /> Your Stamp Collection
             </h3>
             <div className="grid grid-cols-2 gap-4 mb-6">
               {data.destinations.map((dest) => (
