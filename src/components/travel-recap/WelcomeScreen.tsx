@@ -18,7 +18,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
   const headline = headlines[Math.floor(Math.random() * headlines.length)];
 
   return (
-    <div className="min-h-screen bg-[#0F172A] relative overflow-hidden flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-[#0B0101] relative overflow-hidden flex flex-col items-center justify-center p-6">
       {/* Decorative floating elements - solid colors */}
       <Plane className="absolute top-20 left-10 text-[#FF5B04] opacity-20 w-16 h-16 rotate-12" />
       <Plane className="absolute bottom-32 right-20 text-[#2563EB] opacity-30 w-12 h-12 -rotate-45" />

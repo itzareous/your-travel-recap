@@ -159,7 +159,7 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
   const taggedCount = images.filter(img => img.location).length;
 
   return (
-    <div className="min-h-screen bg-[#0F172A] flex flex-col">
+    <div className="min-h-screen bg-[#0B0101] flex flex-col">
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -262,12 +262,12 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
                       e.stopPropagation();
                       removeImage(image.id);
                     }}
-                    className="absolute top-1 right-1 p-1 bg-[#0F172A] rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#FF5B04]"
+                    className="absolute top-1 right-1 p-1 bg-[#0B0101] rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#FF5B04]"
                   >
                     <X className="w-4 h-4 text-white" />
                   </button>
                   {/* Status badge */}
-                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-[#0F172A]/80">
+                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-[#0B0101]/80">
                     {image.location ? (
                       <p className="text-[#F4D47C] text-xs truncate">
                         {image.location.type === 'city' 

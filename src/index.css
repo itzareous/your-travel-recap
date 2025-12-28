@@ -5,7 +5,7 @@
 @layer base {
   :root {
     /* Dark Mode Base - Vibrant Happy Colors */
-    --background: 222 47% 11%; /* #0F172A - Main dark background */
+    --background: 0 94% 4%; /* #0B0101 - Main dark background */
     --foreground: 44 69% 94%; /* #FDF6E3 - Ivory text */
 
     --card: 206 24% 18%; /* #233038 - Gunmetal */
@@ -72,7 +72,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-[#0F172A] text-[#FDF6E3];
+    @apply bg-[#0B0101] text-[#FDF6E3];
     font-family: 'Inter', system-ui, sans-serif;
   }
 }

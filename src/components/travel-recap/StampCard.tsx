@@ -35,7 +35,7 @@ export default function StampCard({ destination, isActive = false, size = 'md' }
         {/* Inner content */}
         <div className="flex flex-col h-full">
           {/* Image area */}
-          <div className="flex-1 relative bg-[#0F172A]">
+          <div className="flex-1 relative bg-[#0B0101]">
             {firstImage ? (
               <>
                 <img

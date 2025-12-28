@@ -271,7 +271,7 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
     
     try {
       const canvas = await html2canvas(slideRef.current, {
-        backgroundColor: '#0F172A',
+        backgroundColor: '#0B0101',
         scale: 2,
         useCORS: true,
         allowTaint: true,
@@ -289,7 +289,7 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
   return (
     <div 
       ref={slideRef}
-      className="min-h-screen bg-[#0F172A] flex flex-col cursor-pointer select-none"
+      className="min-h-screen bg-[#0B0101] flex flex-col cursor-pointer select-none"
       onClick={handleTap}
     >
       {/* Progress bars */}
@@ -373,7 +373,7 @@ function IntroSlide({ profile, totalDestinations, quarterlyData }: { profile: Tr
   const randomOpening = OPENING_LINES[openingIndex];
   
   return (
-    <div className="absolute inset-0 bg-[#0F172A] flex flex-col items-center justify-center p-8 text-center">
+    <div className="absolute inset-0 bg-[#0B0101] flex flex-col items-center justify-center p-8 text-center">
       {/* Decorative emoji */}
       <div className="text-8xl mb-6 animate-bounce">✈️</div>
       
@@ -440,7 +440,7 @@ function QuarterIntroSlide({ quarter, quarterName, count, destinations }: { quar
   const photoCount = destinations.reduce((sum, dest) => sum + dest.images.length, 0);
   
   return (
-    <div className="absolute inset-0 bg-gradient-to-br from-[#0F172A] to-[#233038] flex flex-col items-center justify-center p-8 text-[#FDF6E3]">
+    <div className="absolute inset-0 bg-gradient-to-br from-[#0B0101] to-[#233038] flex flex-col items-center justify-center p-8 text-[#FDF6E3]">
       {/* Large emoji */}
       <div className="text-8xl mb-4">{info.emoji}</div>
       
@@ -639,7 +639,7 @@ function SummarySlide({ data, quarterlyData, onShare, onRestart }: { data: Trave
     .reduce((max, q) => quarterlyData[q].length > quarterlyData[max].length ? q : max, 'Q1' as QuarterKey);
   
   return (
-    <div className="absolute inset-0 bg-[#0F172A] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+    <div className="absolute inset-0 bg-[#0B0101] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
       <div className="p-6 pb-48">
         {/* Header with personality */}
         <div className="text-center mb-8">
@@ -772,7 +772,7 @@ function SummarySlide({ data, quarterlyData, onShare, onRestart }: { data: Trave
       </div>
       
       {/* Fixed bottom buttons */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#0F172A] via-[#0F172A] to-transparent p-6 pt-12 space-y-3">
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#0B0101] via-[#0B0101] to-transparent p-6 pt-12 space-y-3">
         <Button 
           onClick={onShare}
           disabled={data.destinations.length === 0}

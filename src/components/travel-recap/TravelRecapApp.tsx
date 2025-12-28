@@ -46,7 +46,7 @@ export default function TravelRecapApp() {
   const geoTaggedCount = images.filter(img => img.geoTag).length;
 
   return (
-    <div className="min-h-screen bg-[#0F172A] text-[#FDF6E3]">
+    <div className="min-h-screen bg-[#0B0101] text-[#FDF6E3]">
       {step === 'welcome' && (
         <WelcomeScreen onStart={() => setStep('profile')} />
       )}

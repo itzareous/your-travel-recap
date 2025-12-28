@@ -179,7 +179,7 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
 
   if (currentIndex >= taggedImages.length) {
     return (
-      <div className="min-h-screen bg-[#0F172A] flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-[#0B0101] flex flex-col items-center justify-center p-4">
         <div className="text-center">
           <div className="w-20 h-20 bg-[#075056] rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Check className="w-10 h-10 text-[#2563EB]" />
@@ -201,9 +201,9 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
   }
 
   return (
-    <div className="min-h-screen bg-[#0F172A] flex flex-col">
+    <div className="min-h-screen bg-[#0B0101] flex flex-col">
       {/* Fixed Top Navigation Bar */}
-      <div className="fixed top-0 left-0 right-0 bg-[#0F172A] border-b border-[#233038] p-4 flex items-center justify-between z-10">
+      <div className="fixed top-0 left-0 right-0 bg-[#0B0101] border-b border-[#233038] p-4 flex items-center justify-between z-10">
         {/* Back button - left */}
         <button 
           onClick={onBack}
@@ -308,7 +308,7 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
           // Manual input form in footer
           <div className="max-w-2xl mx-auto space-y-3">
             {/* Type toggle */}
-            <div className="flex gap-2 bg-[#0F172A] rounded-lg p-1">
+            <div className="flex gap-2 bg-[#0B0101] rounded-lg p-1">
               <button
                 onClick={() => setLocationType('city')}
                 className={`flex-1 py-2 rounded-md font-medium transition-all flex items-center justify-center gap-2 ${
@@ -341,12 +341,12 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
                   placeholder="City name"
                   value={cityName}
                   onChange={(e) => setCityName(e.target.value)}
-                  className="flex-1 bg-[#0F172A] border border-[#075056] text-[#FDF6E3] px-4 py-3 rounded-lg focus:border-[#FF5B04] focus:outline-none placeholder:text-[#D3DBDD]"
+                  className="flex-1 bg-[#0B0101] border border-[#075056] text-[#FDF6E3] px-4 py-3 rounded-lg focus:border-[#FF5B04] focus:outline-none placeholder:text-[#D3DBDD]"
                 />
                 <div className="relative flex-1">
                   <button
                     onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                    className="w-full h-full px-4 py-3 rounded-lg border border-[#075056] bg-[#0F172A] flex items-center justify-between text-left hover:border-[#FF5B04] transition-colors"
+                    className="w-full h-full px-4 py-3 rounded-lg border border-[#075056] bg-[#0B0101] flex items-center justify-between text-left hover:border-[#FF5B04] transition-colors"
                   >
                     <span className={`truncate ${selectedCountry ? 'text-[#FDF6E3]' : 'text-[#D3DBDD]'}`}>
                       {selectedCountry || 'Country'}
@@ -363,7 +363,7 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
                             value={countrySearch}
                             onChange={(e) => setCountrySearch(e.target.value)}
                             placeholder="Search..."
-                            className="h-10 pl-9 rounded-lg bg-[#0F172A] border-[#075056] text-[#FDF6E3] placeholder:text-[#D3DBDD] focus:border-[#FF5B04]"
+                            className="h-10 pl-9 rounded-lg bg-[#0B0101] border-[#075056] text-[#FDF6E3] placeholder:text-[#D3DBDD] focus:border-[#FF5B04]"
                             autoFocus
                           />
                         </div>
@@ -397,7 +397,7 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
               <div className="relative">
                 <button
                   onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                  className="w-full px-4 py-3 rounded-lg border border-[#075056] bg-[#0F172A] flex items-center justify-between text-left hover:border-[#FF5B04] transition-colors"
+                  className="w-full px-4 py-3 rounded-lg border border-[#075056] bg-[#0B0101] flex items-center justify-between text-left hover:border-[#FF5B04] transition-colors"
                 >
                   <span className={selectedCountry ? 'text-[#FDF6E3]' : 'text-[#D3DBDD]'}>
                     {selectedCountry || 'Select country'}
@@ -414,7 +414,7 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
                           value={countrySearch}
                           onChange={(e) => setCountrySearch(e.target.value)}
                           placeholder="Search countries..."
-                          className="h-10 pl-9 rounded-lg bg-[#0F172A] border-[#075056] text-[#FDF6E3] placeholder:text-[#D3DBDD] focus:border-[#FF5B04]"
+                          className="h-10 pl-9 rounded-lg bg-[#0B0101] border-[#075056] text-[#FDF6E3] placeholder:text-[#D3DBDD] focus:border-[#FF5B04]"
                           autoFocus
                         />
                       </div>

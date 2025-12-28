@@ -10,7 +10,7 @@ interface TaggingIntroProps {
 
 export default function TaggingIntro({ imageCount, geoTaggedCount, onContinue, onBack }: TaggingIntroProps) {
   return (
-    <div className="min-h-screen bg-[#0F172A] flex flex-col">
+    <div className="min-h-screen bg-[#0B0101] flex flex-col">
       {/* Header */}
       <div className="p-4 flex items-center justify-between">
         <button 
