@@ -263,8 +263,8 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
             {/* Location suggestion overlay - positioned at bottom of image */}
             {hasSuggestion && showSuggestion && (
               <div className="absolute bottom-4 left-4 right-4 bg-[#075056]/95 border-l-4 border-[#F4D47C] rounded-lg p-4 backdrop-blur-sm">
-                <p className="text-[#FDF6E3] text-sm mb-1">
-                  📍 We detected this might be from
+                <p className="text-[#FDF6E3] text-sm mb-1 flex items-center gap-1">
+                  <img src="/images/stamp.webp" alt="Location" className="w-4 h-4 inline object-contain" /> We detected this might be from
                 </p>
                 <p className="text-[#F4D47C] text-lg font-bold">
                   {currentImage.geoTag?.suggestedCity 

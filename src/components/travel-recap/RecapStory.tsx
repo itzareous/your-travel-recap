@@ -496,7 +496,7 @@ function QuarterIntroSlide({ quarter, quarterName, count, destinations }: { quar
             key={dest.id}
             className="bg-[#075056] border-2 border-[#F4D47C] px-4 py-2 rounded-full text-[#FDF6E3] flex items-center gap-2 hover:scale-105 transition-transform"
           >
-            <span>📍</span>
+            <img src="/images/stamp.webp" alt="Pin" className="w-4 h-4 object-contain" />
             <span>
               {dest.type === 'city' 
                 ? `${dest.name}, ${dest.country}`
@@ -504,7 +504,7 @@ function QuarterIntroSlide({ quarter, quarterName, count, destinations }: { quar
               }
             </span>
             {dest.images.length > 0 && (
-              <span className="text-[#F4D47C] text-xs">({dest.images.length}📸)</span>
+              <span className="text-[#F4D47C] text-xs flex items-center gap-1">({dest.images.length}<img src="/images/camera.webp" alt="Photos" className="w-3 h-3 object-contain" />)</span>
             )}
           </div>
         ))}
@@ -621,7 +621,7 @@ function DestinationSlide({ destination, quarter }: { destination: TravelDestina
               </>
             )}
           </div>
-          <p className="text-[#D3DBDD] mt-4 text-sm">No photos uploaded for this destination 📷</p>
+          <p className="text-[#D3DBDD] mt-4 text-sm flex items-center justify-center gap-1">No photos uploaded for this destination <img src="/images/camera.webp" alt="Camera" className="w-4 h-4 object-contain" /></p>
         </div>
       )}
     </div>
@@ -710,7 +710,7 @@ function SummarySlide({ data, quarterlyData, onShare, onRestart }: { data: Trave
                   }
                 </p>
                 <p className="text-white/80 mt-2">
-                  {mostVisited.images.length} photos • You couldn't get enough! 😍
+                  {mostVisited.images.length} photos • You couldn't get enough! <img src="/images/party-popper.webp" alt="Love" className="w-5 h-5 inline object-contain" />
                 </p>
               </div>
             )}
@@ -763,22 +763,22 @@ function SummarySlide({ data, quarterlyData, onShare, onRestart }: { data: Trave
             {/* Final message */}
             <div className="bg-[#075056] border-l-4 border-[#F4D47C] rounded-lg p-5 text-center mb-6">
               <p className="text-[#FDF6E3] text-xl mb-2">
-                What a year, @{data.profile.username}! 🎉
+                What a year, @{data.profile.username}! <img src="/images/party-popper.webp" alt="Party" className="w-6 h-6 inline object-contain" />
               </p>
               <p className="text-[#D3DBDD]">
-                Can't wait to see where 2026 takes you! ✈️✨
+                Can't wait to see where 2026 takes you! <img src="/images/airplane.webp" alt="Plane" className="w-5 h-5 inline object-contain" />
               </p>
             </div>
           </>
         ) : (
           <div className="mb-6 text-center py-12">
-            <div className="text-6xl mb-4">🗺️</div>
+            <img src="/images/world-map.webp" alt="World Map" className="w-16 h-16 mb-4 mx-auto object-contain" />
             <div className="w-20 h-20 bg-[#233038] rounded-2xl flex items-center justify-center mx-auto mb-4">
               <MapPin className="w-10 h-10 text-[#D3DBDD]" />
             </div>
             <p className="text-[#FDF6E3] text-xl font-bold mb-2">No destinations tagged yet</p>
             <p className="text-[#D3DBDD] text-sm opacity-70">Go back and tag your travel photos!</p>
-            <p className="text-[#F4D47C] text-sm mt-4 italic">Your adventure awaits! ✨</p>
+            <p className="text-[#F4D47C] text-sm mt-4 italic flex items-center justify-center gap-1">Your adventure awaits! <img src="/images/party-popper.webp" alt="Sparkles" className="w-4 h-4 object-contain" /></p>
           </div>
         )}
       </div>
@@ -791,14 +791,14 @@ function SummarySlide({ data, quarterlyData, onShare, onRestart }: { data: Trave
           className="w-full h-14 bg-[#FF5B04] hover:bg-[#E54F03] rounded-xl font-bold text-lg disabled:bg-[#233038] disabled:text-[#D3DBDD] transition-all shadow-lg shadow-[#FF5B04]/30 disabled:shadow-none"
         >
           <Download className="w-5 h-5 mr-2" />
-          📥 Download My Recap
+          Download My Recap
         </Button>
         <Button 
           onClick={onRestart}
           variant="outline"
           className="w-full h-14 border-2 border-[#D3DBDD] text-[#D3DBDD] hover:border-[#FF5B04] hover:text-[#FF5B04] bg-transparent rounded-xl font-semibold text-lg transition-all"
         >
-          Create Another ✨
+          Create Another
         </Button>
       </div>
     </div>

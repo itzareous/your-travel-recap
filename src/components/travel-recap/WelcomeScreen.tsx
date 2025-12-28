@@ -84,8 +84,8 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
       </div>
 
       {/* Footer */}
-      <div className="absolute bottom-6 text-center text-[#D3DBDD] text-sm opacity-50">
-        ✈️ Where did your adventures take you? | Stamped Recap 2025
+      <div className="absolute bottom-6 text-center text-[#D3DBDD] text-sm opacity-50 flex items-center justify-center gap-1">
+        <img src="/images/airplane.webp" alt="Plane" className="w-4 h-4 inline object-contain" /> Where did your adventures take you? | Stamped Recap 2025
       </div>
     </div>
   );
