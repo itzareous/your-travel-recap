@@ -75,4 +75,39 @@
     @apply bg-[#0B0101] text-[#FDF6E3];
     font-family: 'Inter', system-ui, sans-serif;
   }
+  
+  /* Apply Eczar font to all headings */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Eczar', serif;
+  }
+}
+
+/* Eczar for large text sizes and bold headings */
+.text-5xl, .text-4xl, .text-3xl, .text-2xl, .text-xl {
+  font-family: 'Eczar', serif;
+}
+
+/* Animated blob keyframes */
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
 }

@@ -238,7 +238,7 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
                 </>
               ) : (
                 <>
-                  <Upload className="w-16 h-16 text-[#D3DBDD] mx-auto mb-4" />
+                  <Plus className="w-16 h-16 text-[#D3DBDD] mx-auto mb-4" />
                   <p className="text-[#FDF6E3] font-medium text-lg mb-1">Click to upload photos</p>
                   <p className="text-[#D3DBDD] text-sm">or drag and drop</p>
                 </>

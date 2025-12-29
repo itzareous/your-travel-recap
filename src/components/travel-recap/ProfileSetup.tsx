@@ -11,12 +11,16 @@ interface ProfileSetupProps {
   initialProfile?: UserProfile;
 }
 
-export default function ProfileSetup({ onNext, onBack, initialProfile }: ProfileSetupProps) {
+export default function ProfileSetup({
+  onNext,
+  onBack,
+  initialProfile,
+}: ProfileSetupProps) {
   const [username, setUsername] = useState(initialProfile?.username || "");
 
   const handleSubmit = () => {
     if (username.trim()) {
-      onNext({ username: username.trim(), platform: 'none' });
+      onNext({ username: username.trim(), platform: "none" });
     }
   };
 
@@ -24,7 +28,7 @@ export default function ProfileSetup({ onNext, onBack, initialProfile }: Profile
     <div className="min-h-screen bg-[#0B0101] flex flex-col">
       {/* Header */}
       <div className="p-4 flex items-center justify-between">
-        <button 
+        <button
           onClick={onBack}
           className="p-2 hover:bg-[#233038] rounded-full transition-colors"
         >
@@ -33,19 +37,17 @@ export default function ProfileSetup({ onNext, onBack, initialProfile }: Profile
         <span className="text-sm text-[#D3DBDD] font-medium">Step 1 of 4</span>
         <div className="w-10" />
       </div>
-
       {/* Progress bar */}
       <div className="px-6">
         <div className="h-2 bg-[#233038] rounded-full overflow-hidden">
           <div className="h-full w-1/4 bg-[#FF5B04] rounded-full" />
         </div>
       </div>
-
       {/* Content */}
       <div className="flex-1 flex flex-col justify-center p-6 max-w-md mx-auto w-full">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-[#075056] rounded-full mb-6">
-            <User className="w-10 h-10 text-[#FF5B04]" />
+            <User className="w-10 h-10 text-[#ffffff]" />
           </div>
           <h2 className="text-3xl font-bold text-[#FDF6E3] mb-2">
             Let's personalize your Stamped Recap
@@ -69,7 +71,6 @@ export default function ProfileSetup({ onNext, onBack, initialProfile }: Profile
           />
         </div>
       </div>
-
       {/* Footer */}
       <div className="p-6">
         <Button
