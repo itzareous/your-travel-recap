@@ -1,4 +1,4 @@
-import { MapPin, Camera, Check, ArrowLeft } from "lucide-react";
+import { MapPin, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface TaggingIntroProps {
@@ -50,30 +50,6 @@ export default function TaggingIntro({ imageCount, geoTaggedCount, onContinue, o
               <>You uploaded <span className="text-[#FDF6E3] font-semibold">{imageCount}</span> photos. Let's tag where each one was taken!</>
             )}
           </p>
-          
-          {/* Info cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
-            <div className="bg-[#233038] rounded-xl p-6 border border-[#075056]">
-              <Camera className="w-8 h-8 text-[#2563EB] mx-auto mb-3" />
-              <p className="text-[#D3DBDD] text-sm">
-                We'll show you each photo one by one
-              </p>
-            </div>
-            
-            <div className="bg-[#233038] rounded-xl p-6 border border-[#075056]">
-              <MapPin className="w-8 h-8 text-[#FF5B04] mx-auto mb-3" />
-              <p className="text-[#D3DBDD] text-sm">
-                Confirm detected locations or add them manually
-              </p>
-            </div>
-            
-            <div className="bg-[#233038] rounded-xl p-6 border border-[#075056]">
-              <Check className="w-8 h-8 text-[#F4D47C] mx-auto mb-3" />
-              <p className="text-[#D3DBDD] text-sm">
-                Takes just a few seconds per photo
-              </p>
-            </div>
-          </div>
           
           {/* CTA */}
           <Button

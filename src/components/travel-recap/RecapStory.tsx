@@ -17,7 +17,11 @@ type StorySlide =
   | { type: 'intro' }
   | { type: 'quarter-intro'; quarter: QuarterKey; quarterName: string; count: number; destinations: TravelDestination[] }
   | { type: 'destination'; destination: TravelDestination; quarter: QuarterKey }
-  | { type: 'summary' };
+  | { type: 'summary-intro' }
+  | { type: 'top-spot' }
+  | { type: 'busiest-quarter' }
+  | { type: 'quarter-breakdown' }
+  | { type: 'stamp-collection' };
 
 const QUARTER_NAMES: Record<QuarterKey, string> = {
   Q1: 'Beginning of the Year',
@@ -135,7 +139,7 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
   // Build slides array based on quarters
   const slides: StorySlide[] = useMemo(() => {
     if (data.destinations.length === 0) {
-      return [{ type: 'intro' }, { type: 'summary' }];
+      return [{ type: 'intro' }, { type: 'summary-intro' }, { type: 'stamp-collection' }];
     }
 
     const slideList: StorySlide[] = [{ type: 'intro' }];
@@ -166,7 +170,12 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
       });
     });
     
-    slideList.push({ type: 'summary' });
+    // Summary slides (5 new slides)
+    slideList.push({ type: 'summary-intro' });
+    slideList.push({ type: 'top-spot' });
+    slideList.push({ type: 'busiest-quarter' });
+    slideList.push({ type: 'quarter-breakdown' });
+    slideList.push({ type: 'stamp-collection' });
     
     return slideList;
   }, [data.destinations, quarterlyDestinations]);
@@ -224,8 +233,8 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
 
   // Auto-advance timer
   useEffect(() => {
-    // Don't auto-advance on summary slide
-    if (currentSlide.type === 'summary') {
+    // Don't auto-advance on stamp-collection slide (the final slide)
+    if (currentSlide.type === 'stamp-collection') {
       return;
     }
 
@@ -248,7 +257,7 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
 
   // Separate effect to handle slide advancement when progress reaches 100
   useEffect(() => {
-    if (progress >= 100 && currentSlide.type !== 'summary') {
+    if (progress >= 100 && currentSlide.type !== 'stamp-collection') {
       goToNext();
     }
   }, [progress, currentSlide.type, goToNext]);
@@ -341,8 +350,20 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
         {currentSlide.type === 'destination' && (
           <DestinationSlide destination={currentSlide.destination} quarter={currentSlide.quarter} />
         )}
-        {currentSlide.type === 'summary' && (
-          <SummarySlide data={data} quarterlyData={quarterlyDestinations} onShare={handleShare} onRestart={onRestart} />
+        {currentSlide.type === 'summary-intro' && (
+          <SummaryIntroSlide data={data} quarterlyData={quarterlyDestinations} />
+        )}
+        {currentSlide.type === 'top-spot' && (
+          <TopSpotSlide data={data} />
+        )}
+        {currentSlide.type === 'busiest-quarter' && (
+          <BusiestQuarterSlide quarterlyData={quarterlyDestinations} />
+        )}
+        {currentSlide.type === 'quarter-breakdown' && (
+          <QuarterBreakdownSlide quarterlyData={quarterlyDestinations} />
+        )}
+        {currentSlide.type === 'stamp-collection' && (
+          <StampCollectionSlide data={data} onShare={handleShare} onRestart={onRestart} />
         )}
       </div>
 
@@ -628,169 +649,254 @@ function DestinationSlide({ destination, quarter }: { destination: TravelDestina
   );
 }
 
-function SummarySlide({ data, quarterlyData, onShare, onRestart }: { data: TravelRecapData; quarterlyData: QuarterlyData; onShare: () => void; onRestart: () => void }) {
-  const activeQuarters = (['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).filter(q => quarterlyData[q].length > 0);
-  
-  // Calculate interesting stats
+// Summary Slide 1: Intro Stats
+function SummaryIntroSlide({ data, quarterlyData }: { data: TravelRecapData; quarterlyData: QuarterlyData }) {
   const totalPhotos = data.destinations.reduce((sum, d) => sum + d.images.length, 0);
   const countries = [...new Set(data.destinations.map(d => d.country))];
   const cities = data.destinations.filter(d => d.type === 'city');
   
+  // Use a consistent random opening (seeded by username)
+  const openingIndex = data.profile.username.length % OPENING_LINES.length;
+  const randomMessage = OPENING_LINES[openingIndex];
+  
+  return (
+    <div className="absolute inset-0 bg-[#0B0101] flex flex-col items-center justify-center p-8">
+      {/* Party popper icon */}
+      <img src="/images/party-popper.webp" alt="Celebration" className="w-24 h-24 mb-6 object-contain" />
+      
+      {/* Title */}
+      <h1 className="text-5xl font-bold text-[#FDF6E3] mb-3 text-center">
+        Your 2025 Journey
+      </h1>
+      
+      {/* Username */}
+      <p className="text-[#FF5B04] text-2xl mb-6">@{data.profile.username}</p>
+      
+      {/* Powered by */}
+      <p className="text-[#D3DBDD] text-sm mb-8">Powered by Stamped Recap</p>
+      
+      {/* Fun message */}
+      <p className="text-[#FDF6E3] text-xl italic mb-12 text-center whitespace-pre-line">{randomMessage}</p>
+      
+      {/* Stats grid - 2x2 */}
+      <div className="grid grid-cols-2 gap-4 w-full max-w-md">
+        <div className="bg-[#233038] rounded-2xl p-6 text-center">
+          <img src="/images/total-destinations.webp" alt="Destinations" className="w-12 h-12 mx-auto mb-3 object-contain" />
+          <div className="text-[#FF5B04] text-4xl font-bold">{data.destinations.length}</div>
+          <div className="text-[#D3DBDD]">Total Destinations</div>
+        </div>
+        
+        <div className="bg-[#233038] rounded-2xl p-6 text-center">
+          <img src="/images/camera.webp" alt="Photos" className="w-12 h-12 mx-auto mb-3 object-contain" />
+          <div className="text-[#2563EB] text-4xl font-bold">{totalPhotos}</div>
+          <div className="text-[#D3DBDD]">Memories Captured</div>
+        </div>
+        
+        <div className="bg-[#233038] rounded-2xl p-6 text-center">
+          <img src="/images/world-map.webp" alt="Countries" className="w-12 h-12 mx-auto mb-3 object-contain" />
+          <div className="text-[#F4D47C] text-4xl font-bold">{countries.length}</div>
+          <div className="text-[#D3DBDD]">{countries.length === 1 ? 'Country' : 'Countries'}</div>
+        </div>
+        
+        <div className="bg-[#233038] rounded-2xl p-6 text-center">
+          <img src="/images/city-skyline.webp" alt="Cities" className="w-12 h-12 mx-auto mb-3 object-contain" />
+          <div className="text-[#075056] text-4xl font-bold">{cities.length}</div>
+          <div className="text-[#D3DBDD]">{cities.length === 1 ? 'City' : 'Cities'}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Summary Slide 2: Top Spot
+function TopSpotSlide({ data }: { data: TravelRecapData }) {
   // Find most visited place (most photos)
   const mostVisited = data.destinations.length > 0 
     ? data.destinations.reduce((max, d) => d.images.length > max.images.length ? d : max)
     : null;
   
-  // Find busiest quarter
-  const busiestQuarter = (['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[])
-    .filter(q => quarterlyData[q].length > 0)
-    .reduce((max, q) => quarterlyData[q].length > quarterlyData[max].length ? q : max, 'Q1' as QuarterKey);
+  if (!mostVisited || mostVisited.images.length === 0) {
+    return (
+      <div className="absolute inset-0 bg-gradient-to-br from-[#FF5B04] to-[#E54F03] flex flex-col items-center justify-center p-8">
+        <img src="/images/trophy.webp" alt="Trophy" className="w-24 h-24 mb-6 object-contain" />
+        <h2 className="text-white text-2xl font-bold mb-4">Your Top Spot</h2>
+        <p className="text-white/80 text-xl">No photos uploaded yet!</p>
+        <p className="text-white/60 mt-4">Add photos to see your favorite destination</p>
+      </div>
+    );
+  }
   
   return (
+    <div className="absolute inset-0 bg-gradient-to-br from-[#FF5B04] to-[#E54F03] flex flex-col items-center justify-center p-8">
+      {/* Trophy icon */}
+      <img src="/images/trophy.webp" alt="Trophy" className="w-24 h-24 mb-6 object-contain" />
+      
+      {/* Header */}
+      <h2 className="text-white text-2xl font-bold mb-12 flex items-center gap-2">
+        <img src="/images/trophy.webp" alt="Trophy" className="w-8 h-8 object-contain" />
+        Your Top Spot
+      </h2>
+      
+      {/* Location name - large */}
+      <h1 className="text-white text-6xl font-bold text-center mb-6">
+        {mostVisited.name}
+      </h1>
+      
+      {/* Country if city */}
+      {mostVisited.type === 'city' && (
+        <p className="text-white/90 text-3xl mb-12">{mostVisited.country}</p>
+      )}
+      
+      {/* Stats */}
+      <p className="text-white text-2xl flex items-center gap-2">
+        {mostVisited.images.length} photos • You couldn't get enough! 
+        <img src="/images/party-popper.webp" alt="Love" className="w-8 h-8 object-contain" />
+      </p>
+    </div>
+  );
+}
+
+// Summary Slide 3: Busiest Quarter
+function BusiestQuarterSlide({ quarterlyData }: { quarterlyData: QuarterlyData }) {
+  const activeQuarters = (['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).filter(q => quarterlyData[q].length > 0);
+  
+  if (activeQuarters.length === 0) {
+    return (
+      <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB] to-[#1E40AF] flex flex-col items-center justify-center p-8">
+        <img src="/images/calendar.webp" alt="Calendar" className="w-24 h-24 mb-6 object-contain" />
+        <h2 className="text-white text-2xl font-bold mb-4">Busiest Quarter</h2>
+        <p className="text-white/80 text-xl">No destinations tagged yet!</p>
+      </div>
+    );
+  }
+  
+  const busiestQuarter = activeQuarters.reduce((max, q) => 
+    quarterlyData[q].length > quarterlyData[max].length ? q : max, activeQuarters[0]);
+  
+  return (
+    <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB] to-[#1E40AF] flex flex-col items-center justify-center p-8">
+      {/* Calendar icon */}
+      <img src="/images/calendar.webp" alt="Calendar" className="w-24 h-24 mb-6 object-contain" />
+      
+      {/* Header */}
+      <h2 className="text-white text-2xl font-bold mb-12 flex items-center gap-2">
+        <img src="/images/calendar.webp" alt="Calendar" className="w-8 h-8 object-contain" />
+        Busiest Quarter
+      </h2>
+      
+      {/* Quarter name */}
+      <h1 className="text-white text-6xl font-bold mb-6">
+        {busiestQuarter}
+      </h1>
+      
+      <p className="text-white/90 text-3xl mb-12">
+        {QUARTER_NAMES[busiestQuarter]}
+      </p>
+      
+      {/* Stats */}
+      <p className="text-white text-2xl mb-8 flex items-center gap-2">
+        {quarterlyData[busiestQuarter].length} destinations • You were on fire! 🔥
+      </p>
+      
+      {/* Quarter breakdown mini grid */}
+      <div className="grid grid-cols-4 gap-3 mt-8">
+        {(['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).map(q => (
+          <div key={q} className={`rounded-xl p-4 text-center ${q === busiestQuarter ? 'bg-white' : 'bg-white/20'}`}>
+            <div className={`text-3xl font-bold ${q === busiestQuarter ? 'text-[#2563EB]' : 'text-white'}`}>
+              {quarterlyData[q]?.length || 0}
+            </div>
+            <div className={`text-sm ${q === busiestQuarter ? 'text-[#2563EB]' : 'text-white/80'}`}>{q}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Summary Slide 4: Quarter by Quarter
+function QuarterBreakdownSlide({ quarterlyData }: { quarterlyData: QuarterlyData }) {
+  return (
+    <div className="absolute inset-0 bg-[#0B0101] flex flex-col items-center justify-center p-8">
+      {/* Header */}
+      <h2 className="text-[#FDF6E3] text-3xl font-bold mb-8 text-center flex items-center gap-2">
+        <img src="/images/chart.webp" alt="Chart" className="w-10 h-10 object-contain" />
+        Quarter by Quarter
+      </h2>
+      
+      {/* Large quarter grid */}
+      <div className="grid grid-cols-2 gap-6 w-full max-w-md">
+        {(['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).map(q => (
+          <div key={q} className="bg-[#233038] rounded-2xl p-8 text-center border-2 border-[#075056]">
+            <div className="text-[#FF5B04] text-7xl font-bold mb-3">
+              {quarterlyData[q]?.length || 0}
+            </div>
+            <div className="text-[#D3DBDD] text-xl font-semibold">{q}</div>
+            <div className="text-[#D3DBDD]/60 text-sm mt-1">
+              {quarterlyData[q]?.length === 1 ? 'place' : 'places'}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Summary Slide 5: Stamp Collection + Download
+function StampCollectionSlide({ data, onShare, onRestart }: { data: TravelRecapData; onShare: () => void; onRestart: () => void }) {
+  return (
     <div className="absolute inset-0 bg-[#0B0101] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-      <div className="p-6 pb-48">
-        {/* Header with personality */}
-        <div className="text-center mb-8">
-          <img 
-            src="/images/party-popper.webp" 
-            alt="Party Popper" 
-            className="w-24 h-24 mb-4 mx-auto object-contain"
-          />
-          <h1 className="text-4xl font-bold text-[#FDF6E3] mb-2">
-            Your 2025 Journey
-          </h1>
-          <p className="text-[#FF5B04] text-xl font-medium">@{data.profile.username}</p>
-          <p className="text-[#D3DBDD] text-xs mt-1 opacity-70">Powered by Stamped Recap</p>
-          {data.destinations.length > 0 && (
-            <p className="text-[#D3DBDD] text-sm mt-2 italic">
-              What a year it's been! ✨
-            </p>
-          )}
-        </div>
+      <div className="p-8 pb-32">
+        {/* Header */}
+        <h2 className="text-[#FDF6E3] text-3xl font-bold mb-6 text-center flex items-center justify-center gap-2">
+          <img src="/images/stamp.webp" alt="Stamp" className="w-10 h-10 object-contain" />
+          Your Stamp Collection
+        </h2>
         
         {data.destinations.length > 0 ? (
           <>
-            {/* Main stats grid with emojis */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-[#233038] rounded-2xl p-5 text-center border border-[#075056] hover:border-[#FF5B04] transition-colors">
-                <img src="/images/total-destinations.webp" alt="Globe" className="w-12 h-12 mb-2 mx-auto object-contain" />
-                <div className="text-[#FF5B04] text-4xl font-bold">{data.destinations.length}</div>
-                <div className="text-[#D3DBDD] text-sm">Total Destinations</div>
-              </div>
-              
-              <div className="bg-[#233038] rounded-2xl p-5 text-center border border-[#075056] hover:border-[#2563EB] transition-colors">
-                <img src="/images/camera.webp" alt="Camera" className="w-12 h-12 mb-2 mx-auto object-contain" />
-                <div className="text-[#2563EB] text-4xl font-bold">{totalPhotos}</div>
-                <div className="text-[#D3DBDD] text-sm">Memories Captured</div>
-              </div>
-              
-              <div className="bg-[#233038] rounded-2xl p-5 text-center border border-[#075056] hover:border-[#F4D47C] transition-colors">
-                <img src="/images/world-map.webp" alt="World Map" className="w-12 h-12 mb-2 mx-auto object-contain" />
-                <div className="text-[#F4D47C] text-4xl font-bold">{countries.length}</div>
-                <div className="text-[#D3DBDD] text-sm">{countries.length === 1 ? 'Country' : 'Countries'}</div>
-              </div>
-              
-              <div className="bg-[#233038] rounded-2xl p-5 text-center border border-[#075056] hover:border-[#075056] transition-colors">
-                <img src="/images/city-skyline.webp" alt="City Skyline" className="w-12 h-12 mb-2 mx-auto object-contain" />
-                <div className="text-[#075056] text-4xl font-bold">{cities.length}</div>
-                <div className="text-[#D3DBDD] text-sm">{cities.length === 1 ? 'City' : 'Cities'}</div>
-              </div>
-            </div>
-            
-            {/* Fun insights - Top Spot */}
-            {mostVisited && mostVisited.images.length > 0 && (
-              <div className="bg-gradient-to-r from-[#FF5B04] to-[#E54F03] rounded-2xl p-5 mb-4 shadow-lg">
-                <h3 className="text-white text-lg font-bold mb-2 flex items-center gap-2">
-                  <img src="/images/trophy.webp" alt="Trophy" className="w-6 h-6 object-contain" /> Your Top Spot
-                </h3>
-                <p className="text-white text-2xl font-bold">
-                  {mostVisited.type === 'city' 
-                    ? `${mostVisited.name}, ${mostVisited.country}`
-                    : mostVisited.name
-                  }
-                </p>
-                <p className="text-white/80 mt-2">
-                  {mostVisited.images.length} photos • You couldn't get enough! <img src="/images/party-popper.webp" alt="Love" className="w-5 h-5 inline object-contain" />
-                </p>
-              </div>
-            )}
-            
-            {/* Fun insights - Busiest Quarter */}
-            {activeQuarters.length > 0 && (
-              <div className="bg-gradient-to-r from-[#2563EB] to-[#1E40AF] rounded-2xl p-5 mb-6 shadow-lg">
-                <h3 className="text-white text-lg font-bold mb-2 flex items-center gap-2">
-                  <img src="/images/calendar.webp" alt="Calendar" className="w-6 h-6 object-contain" /> Busiest Quarter
-                </h3>
-                <p className="text-white text-2xl font-bold">
-                  {busiestQuarter} - {QUARTER_NAMES[busiestQuarter]}
-                </p>
-                <p className="text-white/80 mt-2">
-                  {quarterlyData[busiestQuarter].length} destinations • You were on fire! 🔥
-                </p>
-              </div>
-            )}
-            
-            {/* Quarterly breakdown with enhanced styling */}
-            <h3 className="text-[#FDF6E3] text-xl font-bold mb-4 flex items-center gap-2">
-              <img src="/images/chart.webp" alt="Chart" className="w-6 h-6 object-contain" /> Quarter by Quarter
-            </h3>
-            <div className="grid grid-cols-4 gap-3 mb-6">
-              {(['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).map(q => (
-                <div 
-                  key={q} 
-                  className={`rounded-xl p-4 text-center transition-all ${
-                    quarterlyData[q].length > 0 
-                      ? 'bg-[#FF5B04] text-white shadow-lg shadow-[#FF5B04]/20' 
-                      : 'bg-[#233038] text-[#D3DBDD] opacity-50'
-                  }`}
-                >
-                  <div className="text-3xl font-bold">{quarterlyData[q].length}</div>
-                  <div className="text-sm font-medium">{q}</div>
-                </div>
-              ))}
-            </div>
-            
-            {/* Stamps collection */}
-            <h3 className="text-[#FDF6E3] text-xl font-bold mb-4 flex items-center gap-2">
-              <img src="/images/stamp.webp" alt="Stamp" className="w-6 h-6 object-contain" /> Your Stamp Collection
-            </h3>
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            {/* Stamps grid */}
+            <div className="grid grid-cols-2 gap-4 mb-8">
               {data.destinations.map((dest) => (
                 <StampCard key={dest.id} destination={dest} />
               ))}
             </div>
             
             {/* Final message */}
-            <div className="bg-[#075056] border-l-4 border-[#F4D47C] rounded-lg p-5 text-center mb-6">
-              <p className="text-[#FDF6E3] text-xl mb-2">
-                What a year, @{data.profile.username}! <img src="/images/party-popper.webp" alt="Party" className="w-6 h-6 inline object-contain" />
+            <div className="bg-[#075056] border-l-4 border-[#F4D47C] rounded-lg p-6 text-center mb-6">
+              <p className="text-[#FDF6E3] text-xl mb-2 flex items-center justify-center gap-2">
+                What a year, @{data.profile.username}! 
+                <img src="/images/party-popper.webp" alt="Party" className="w-6 h-6 object-contain" />
               </p>
-              <p className="text-[#D3DBDD]">
-                Can't wait to see where 2026 takes you! <img src="/images/airplane.webp" alt="Plane" className="w-5 h-5 inline object-contain" />
+              <p className="text-[#D3DBDD] flex items-center justify-center gap-1">
+                Can't wait to see where 2026 takes you! 
+                <img src="/images/airplane.webp" alt="Plane" className="w-5 h-5 object-contain" />
               </p>
             </div>
           </>
         ) : (
-          <div className="mb-6 text-center py-12">
+          <div className="text-center py-12">
             <img src="/images/world-map.webp" alt="World Map" className="w-16 h-16 mb-4 mx-auto object-contain" />
             <div className="w-20 h-20 bg-[#233038] rounded-2xl flex items-center justify-center mx-auto mb-4">
               <MapPin className="w-10 h-10 text-[#D3DBDD]" />
             </div>
             <p className="text-[#FDF6E3] text-xl font-bold mb-2">No destinations tagged yet</p>
             <p className="text-[#D3DBDD] text-sm opacity-70">Go back and tag your travel photos!</p>
-            <p className="text-[#F4D47C] text-sm mt-4 italic flex items-center justify-center gap-1">Your adventure awaits! <img src="/images/party-popper.webp" alt="Sparkles" className="w-4 h-4 object-contain" /></p>
+            <p className="text-[#F4D47C] text-sm mt-4 italic flex items-center justify-center gap-1">
+              Your adventure awaits! 
+              <img src="/images/party-popper.webp" alt="Sparkles" className="w-4 h-4 object-contain" />
+            </p>
           </div>
         )}
       </div>
       
       {/* Fixed bottom buttons */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#0B0101] via-[#0B0101] to-transparent p-6 pt-12 space-y-3">
+      <div className="fixed bottom-0 left-0 right-0 bg-[#233038] p-6 space-y-3">
         <Button 
           onClick={onShare}
           disabled={data.destinations.length === 0}
-          className="w-full h-14 bg-[#FF5B04] hover:bg-[#E54F03] rounded-xl font-bold text-lg disabled:bg-[#233038] disabled:text-[#D3DBDD] transition-all shadow-lg shadow-[#FF5B04]/30 disabled:shadow-none"
+          className="w-full h-14 bg-[#FF5B04] hover:bg-[#E54F03] rounded-xl font-bold text-lg disabled:bg-[#233038] disabled:text-[#D3DBDD] transition-all"
         >
-          <Download className="w-5 h-5 mr-2" />
+          <Download className="w-6 h-6 mr-2" />
           Download My Recap
         </Button>
         <Button 
