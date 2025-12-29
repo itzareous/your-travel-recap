@@ -1,8 +1,10 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { TravelImage } from "./types";
 import { ArrowLeft, ArrowRight, Plus, X, Upload, Image as ImageIcon, Loader2, MapPin } from "lucide-react";
 import exifr from "exifr";
+import { fadeInUp, scaleInBounce, staggerContainer, popIn } from "@/utils/animations";
 
 interface ImageUploaderProps {
   onNext: (images: TravelImage[]) => void;
@@ -13,7 +15,14 @@ interface ImageUploaderProps {
 export default function ImageUploader({ onNext, onBack, initialImages }: ImageUploaderProps) {
   const [images, setImages] = useState<TravelImage[]>(initialImages || []);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [progressWidth, setProgressWidth] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Animate progress bar on mount
+    const timer = setTimeout(() => setProgressWidth(50), 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   const extractExifData = async (file: File): Promise<{ geoTag?: TravelImage['geoTag']; timestamp?: number }> => {
     let geoTag: TravelImage['geoTag'] | undefined;
@@ -176,166 +185,274 @@ export default function ImageUploader({ onNext, onBack, initialImages }: ImageUp
       />
 
       {/* Header */}
-      <div className="p-4 flex items-center justify-between">
-        <button 
+      <motion.div 
+        className="p-4 flex items-center justify-between"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <motion.button 
           onClick={onBack}
           className="p-2 hover:bg-[#233038] rounded-full transition-colors"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
         >
           <ArrowLeft className="w-6 h-6 text-[#D3DBDD]" />
-        </button>
-        <span className="text-sm text-[#D3DBDD]">Step 2 of 4</span>
+        </motion.button>
+        <motion.span 
+          className="text-sm text-[#D3DBDD]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          Step 2 of 4
+        </motion.span>
         <div className="w-10" />
-      </div>
+      </motion.div>
 
       {/* Progress bar */}
       <div className="px-6 mb-4">
         <div className="h-2 bg-[#233038] rounded-full overflow-hidden">
-          <div className="h-full w-2/4 bg-[#FF5B04] rounded-full" />
+          <motion.div 
+            className="h-full bg-[#FF5B04] rounded-full"
+            initial={{ width: "25%" }}
+            animate={{ width: `${progressWidth}%` }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+          />
         </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 px-4 pb-4 overflow-y-auto">
         <div className="max-w-lg mx-auto">
-          <h1 className="text-2xl font-bold text-[#FDF6E3] mb-2">Upload your travel memories</h1>
-          <p className="text-[#D3DBDD] mb-6">Add photos from your travels and we'll help you tag them</p>
+          <motion.h1 
+            className="text-2xl font-bold text-[#FDF6E3] mb-2"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            Upload your travel memories
+          </motion.h1>
+          <motion.p 
+            className="text-[#D3DBDD] mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+          >
+            Add photos from your travels and we'll help you tag them
+          </motion.p>
 
           {/* Progress indicator */}
-          {images.length > 0 && (
-            <div className="mb-4 p-3 bg-[#233038] rounded-xl border border-[#075056]">
-              <p className="text-sm text-[#F4D47C]">
-                {taggedCount} of {images.length} images tagged
-              </p>
-            </div>
-          )}
+          <AnimatePresence>
+            {images.length > 0 && (
+              <motion.div 
+                className="mb-4 p-3 bg-[#233038] rounded-xl border border-[#075056]"
+                initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.3 }}
+              >
+                <p className="text-sm text-[#F4D47C]">
+                  {taggedCount} of {images.length} images tagged
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Upload area - only show when no images */}
-          {images.length === 0 && (
-            <div 
-              onClick={() => !isProcessing && fileInputRef.current?.click()}
-              onDragOver={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              onDragEnter={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (!isProcessing && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                  handleFilesSelected(e.dataTransfer.files);
-                }
-              }}
-              className={`mb-6 border-2 border-dashed border-[#075056] bg-[#233038] rounded-2xl p-12 text-center cursor-pointer hover:border-[#FF5B04] transition-colors relative ${isProcessing ? 'pointer-events-none' : ''}`}
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-12 h-12 text-[#FF5B04] mx-auto mb-4 animate-spin" />
-                  <p className="text-[#FF5B04] font-medium mb-1">Processing images...</p>
-                  <p className="text-[#D3DBDD] text-sm">Please wait</p>
-                </>
-              ) : (
-                <>
-                  <Plus className="w-16 h-16 text-[#D3DBDD] mx-auto mb-4" />
-                  <p className="text-[#FDF6E3] font-medium text-lg mb-1">Click to upload photos</p>
-                  <p className="text-[#D3DBDD] text-sm">or drag and drop</p>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Image grid */}
-          {images.length > 0 && (
-            <div className="grid grid-cols-3 gap-3 mb-6">
-              {images.map((image) => (
-                <div key={image.id} className="relative aspect-square rounded-xl overflow-hidden group border border-[#075056]">
-                  <img 
-                    src={image.preview} 
-                    alt="Travel memory"
-                    className="w-full h-full object-cover"
-                  />
-                  {/* Remove button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeImage(image.id);
-                    }}
-                    className="absolute top-1 right-1 p-1 bg-[#0B0101] rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#FF5B04]"
-                  >
-                    <X className="w-4 h-4 text-white" />
-                  </button>
-                  {/* Status badge */}
-                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-[#0B0101]/80">
-                    {image.location ? (
-                      <p className="text-[#F4D47C] text-xs truncate">
-                        {image.location.type === 'city' 
-                          ? `${image.location.name}, ${image.location.country}`
-                          : image.location.country}
-                      </p>
-                    ) : (
-                      <p className="text-[#D3DBDD] text-xs">Not tagged</p>
-                    )}
-                  </div>
-                  {/* Location indicator */}
-                  {image.geoTag && !image.location && (
-                    <div className="absolute top-1 left-1 px-2 py-0.5 bg-[#2563EB] rounded-full flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-white" />
-                      <p className="text-white text-[10px]">Location</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-              {/* Add more button */}
-              <button
+          <AnimatePresence>
+            {images.length === 0 && (
+              <motion.div 
                 onClick={() => !isProcessing && fileInputRef.current?.click()}
-                disabled={isProcessing}
-                className="aspect-square rounded-xl border-2 border-dashed border-[#075056] bg-[#233038] flex flex-col items-center justify-center hover:border-[#FF5B04] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDragEnter={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!isProcessing && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    handleFilesSelected(e.dataTransfer.files);
+                  }
+                }}
+                className={`mb-6 border-2 border-dashed border-[#075056] bg-[#233038] rounded-2xl p-12 text-center cursor-pointer hover:border-[#FF5B04] transition-colors relative ${isProcessing ? 'pointer-events-none' : ''}`}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ 
+                  opacity: 1, 
+                  scale: 1,
+                  boxShadow: ["0 0 0px rgba(255, 91, 4, 0)", "0 0 20px rgba(255, 91, 4, 0.2)", "0 0 0px rgba(255, 91, 4, 0)"]
+                }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ 
+                  duration: 0.5,
+                  boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                }}
+                whileHover={{ scale: 1.02, borderColor: "#FF5B04" }}
               >
                 {isProcessing ? (
-                  <Loader2 className="w-8 h-8 text-[#FF5B04] animate-spin" />
+                  <>
+                    <Loader2 className="w-12 h-12 text-[#FF5B04] mx-auto mb-4 animate-spin" />
+                    <p className="text-[#FF5B04] font-medium mb-1">Processing images...</p>
+                    <p className="text-[#D3DBDD] text-sm">Please wait</p>
+                  </>
                 ) : (
                   <>
-                    <Plus className="w-8 h-8 text-[#D3DBDD]" />
-                    <span className="text-xs text-[#D3DBDD] mt-1">Add more</span>
+                    <motion.div
+                      animate={{ y: [0, -5, 0] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <Plus className="w-16 h-16 text-[#D3DBDD] mx-auto mb-4" />
+                    </motion.div>
+                    <p className="text-[#FDF6E3] font-medium text-lg mb-1">Click to upload photos</p>
+                    <p className="text-[#D3DBDD] text-sm">or drag and drop</p>
                   </>
                 )}
-              </button>
-            </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Image grid */}
+          <AnimatePresence>
+            {images.length > 0 && (
+              <motion.div 
+                className="grid grid-cols-3 gap-3 mb-6"
+                variants={staggerContainer}
+                initial="hidden"
+                animate="visible"
+              >
+                {images.map((image, index) => (
+                  <motion.div 
+                    key={image.id} 
+                    className="relative aspect-square rounded-xl overflow-hidden group border border-[#075056]"
+                    variants={popIn}
+                    initial="hidden"
+                    animate="visible"
+                    transition={{ delay: index * 0.1 }}
+                    layout
+                  >
+                    <img 
+                      src={image.preview} 
+                      alt="Travel memory"
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Remove button */}
+                    <motion.button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeImage(image.id);
+                      }}
+                      className="absolute top-1 right-1 p-1 bg-[#0B0101] rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#FF5B04]"
+                      whileHover={{ scale: 1.2 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <X className="w-4 h-4 text-white" />
+                    </motion.button>
+                    {/* Status badge */}
+                    <div className="absolute bottom-0 left-0 right-0 p-2 bg-[#0B0101]/80">
+                      {image.location ? (
+                        <p className="text-[#F4D47C] text-xs truncate">
+                          {image.location.type === 'city' 
+                            ? `${image.location.name}, ${image.location.country}`
+                            : image.location.country}
+                        </p>
+                      ) : (
+                        <p className="text-[#D3DBDD] text-xs">Not tagged</p>
+                      )}
+                    </div>
+                    {/* Location indicator */}
+                    {image.geoTag && !image.location && (
+                      <motion.div 
+                        className="absolute top-1 left-1 px-2 py-0.5 bg-[#2563EB] rounded-full flex items-center gap-1"
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.3, type: "spring" }}
+                      >
+                        <motion.div
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                        >
+                          <MapPin className="w-3 h-3 text-white" />
+                        </motion.div>
+                        <p className="text-white text-[10px]">Location</p>
+                      </motion.div>
+                    )}
+                  </motion.div>
+                ))}
+                {/* Add more button */}
+                <motion.button
+                  onClick={() => !isProcessing && fileInputRef.current?.click()}
+                  disabled={isProcessing}
+                  className="aspect-square rounded-xl border-2 border-dashed border-[#075056] bg-[#233038] flex flex-col items-center justify-center hover:border-[#FF5B04] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  variants={popIn}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {isProcessing ? (
+                    <Loader2 className="w-8 h-8 text-[#FF5B04] animate-spin" />
+                  ) : (
+                    <>
+                      <Plus className="w-8 h-8 text-[#D3DBDD]" />
+                      <span className="text-xs text-[#D3DBDD] mt-1">Add more</span>
+                    </>
+                  )}
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Empty state - only show when no images and not processing */}
-          {images.length === 0 && !isProcessing && (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <p className="text-[#D3DBDD] text-sm">Upload your travel memories to get started</p>
-            </div>
-          )}
+          <AnimatePresence>
+            {images.length === 0 && !isProcessing && (
+              <motion.div 
+                className="flex flex-col items-center justify-center py-8 text-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ delay: 0.8 }}
+              >
+                <p className="text-[#D3DBDD] text-sm">Upload your travel memories to get started</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="p-4 bg-[#233038] border-t border-[#075056]">
+      <motion.div 
+        className="p-4 bg-[#233038] border-t border-[#075056]"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6, duration: 0.5 }}
+      >
         <div className="max-w-lg mx-auto">
-          <Button
-            onClick={() => onNext(images)}
-            disabled={images.length === 0 || isProcessing}
-            className="w-full h-12 rounded-full bg-[#FF5B04] hover:bg-[#E54F03] text-white font-medium disabled:bg-[#233038] disabled:text-[#D3DBDD] transition-colors"
+          <motion.div
+            whileHover={{ scale: images.length > 0 && !isProcessing ? 1.02 : 1 }}
+            whileTap={{ scale: images.length > 0 && !isProcessing ? 0.98 : 1 }}
           >
-            {isProcessing ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
-                Continue to Tag Locations
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </>
-            )}
-          </Button>
+            <Button
+              onClick={() => onNext(images)}
+              disabled={images.length === 0 || isProcessing}
+              className="w-full h-12 rounded-full bg-[#FF5B04] hover:bg-[#E54F03] text-white font-medium disabled:bg-[#233038] disabled:text-[#D3DBDD] transition-colors"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  Continue to Tag Locations
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </>
+              )}
+            </Button>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

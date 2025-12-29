@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { TravelRecapData, TravelDestination, TravelImage, UserProfile } from "./types";
 import WelcomeScreen from "./WelcomeScreen";
 import ProfileSetup from "./ProfileSetup";
@@ -8,6 +9,19 @@ import LocationTagger from "./LocationTagger";
 import RecapStory from "./RecapStory";
 
 type Step = 'welcome' | 'profile' | 'upload' | 'tagging-intro' | 'tag' | 'story';
+
+// Page transition variants
+const pageVariants = {
+  initial: { opacity: 0, x: 50 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -50 }
+};
+
+const pageTransition = {
+  type: "tween",
+  ease: "easeInOut",
+  duration: 0.3
+};
 
 export default function TravelRecapApp() {
   const [step, setStep] = useState<Step>('welcome');

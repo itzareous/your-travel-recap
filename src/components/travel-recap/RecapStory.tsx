@@ -1,9 +1,24 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { TravelRecapData, TravelDestination, getDestinationDisplayName } from "./types";
 import StampCard from "./StampCard";
 import { ArrowLeft, Download, Plane, MapPin, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import html2canvas from "html2canvas";
+import { 
+  fadeInUp, 
+  scaleInBounce, 
+  slideInUp, 
+  slideInLeft, 
+  slideInRight, 
+  bounceDown, 
+  staggerContainer, 
+  staggerContainerSlow,
+  popIn,
+  flip3D,
+  stampThud,
+  animateCounter
+} from "@/utils/animations";
 
 interface RecapStoryProps {
   data: TravelRecapData;
@@ -384,6 +399,57 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
 
 type QuarterlyData = Record<QuarterKey, TravelDestination[]>;
 
+// Counter component with animation
+function AnimatedCounter({ value, className }: { value: number; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    const duration = 1500;
+    const startTime = performance.now();
+    const startValue = 0;
+
+    const updateCounter = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      const currentValue = Math.round(startValue + (value - startValue) * easeProgress);
+      setDisplayValue(currentValue);
+      if (progress < 1) {
+        requestAnimationFrame(updateCounter);
+      }
+    };
+
+    requestAnimationFrame(updateCounter);
+  }, [value]);
+
+  return <div ref={ref} className={className}>{displayValue}</div>;
+}
+
+// Word animation component for titles
+const AnimatedTitle = ({ text, delay = 0 }: { text: string; delay?: number }) => {
+  const words = text.split(" ");
+  return (
+    <>
+      {words.map((word, index) => (
+        <motion.span
+          key={index}
+          className="inline-block mr-3"
+          initial={{ opacity: 0, y: 50, rotateX: -90 }}
+          animate={{ opacity: 1, y: 0, rotateX: 0 }}
+          transition={{
+            duration: 0.6,
+            delay: delay + index * 0.1,
+            ease: [0.34, 1.56, 0.64, 1]
+          }}
+        >
+          {word}
+        </motion.span>
+      ))}
+    </>
+  );
+};
+
 function IntroSlide({ profile, totalDestinations, quarterlyData }: { profile: TravelRecapData['profile']; totalDestinations: number; quarterlyData: QuarterlyData }) {
   // Count active quarters
   const activeQuarters = (['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).filter(q => quarterlyData[q].length > 0);
@@ -394,65 +460,128 @@ function IntroSlide({ profile, totalDestinations, quarterlyData }: { profile: Tr
   const randomOpening = OPENING_LINES[openingIndex];
   
   return (
-    <div className="absolute inset-0 bg-[#0B0101] flex flex-col items-center justify-center p-8 text-center">
-      {/* Decorative 3D airplane */}
-      <img 
+    <div className="absolute inset-0 bg-[#0B0101] flex flex-col items-center justify-center p-8 text-center overflow-hidden">
+      {/* Decorative 3D airplane - flies in from off-screen */}
+      <motion.img 
         src="/images/airplane.webp" 
         alt="Airplane" 
-        className="w-32 h-32 mb-6 animate-bounce object-contain"
+        className="w-32 h-32 mb-6 object-contain"
+        initial={{ x: -200, y: -100, rotate: -45, opacity: 0 }}
+        animate={{ x: 0, y: 0, rotate: 0, opacity: 1 }}
+        transition={{ 
+          type: "spring", 
+          stiffness: 100, 
+          damping: 15,
+          duration: 1 
+        }}
       />
       
       {/* Fun opening line */}
-      <p className="text-[#D3DBDD] text-xl mb-4 text-center whitespace-pre-line">
+      <motion.p 
+        className="text-[#D3DBDD] text-xl mb-4 text-center whitespace-pre-line"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5, duration: 0.6 }}
+      >
         {randomOpening}
-      </p>
+      </motion.p>
       
-      {/* Main title */}
-      <h1 className="text-5xl font-bold text-[#FDF6E3] mb-2">
-        Your 2025 Stamped Recap
+      {/* Main title - word by word */}
+      <h1 className="text-5xl font-bold text-[#FDF6E3] mb-2 overflow-hidden">
+        <AnimatedTitle text="Your 2025 Stamped Recap" delay={0.8} />
       </h1>
       
       {/* Username with flair */}
-      <p className="text-[#FF5B04] text-2xl mb-8 font-medium">@{profile.username}</p>
+      <motion.p 
+        className="text-[#FF5B04] text-2xl mb-8 font-medium"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 1.6, type: "spring", stiffness: 200 }}
+      >
+        @{profile.username}
+      </motion.p>
       
       {/* Stats cards */}
-      <div className="grid grid-cols-2 gap-4 w-full max-w-md mb-6">
-        <div className="bg-[#233038] rounded-xl p-6 text-center border border-[#075056] hover:border-[#FF5B04] transition-colors">
-          <img src="/images/trophy.webp" alt="Trophy" className="w-12 h-12 mb-2 mx-auto object-contain" />
-          <div className="text-[#FF5B04] text-3xl font-bold">{totalDestinations}</div>
+      <motion.div 
+        className="grid grid-cols-2 gap-4 w-full max-w-md mb-6"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div 
+          className="bg-[#233038] rounded-xl p-6 text-center border border-[#075056] hover:border-[#FF5B04] transition-colors"
+          variants={flip3D}
+          transition={{ delay: 1.8 }}
+          whileHover={{ scale: 1.05 }}
+        >
+          <motion.img 
+            src="/images/trophy.webp" 
+            alt="Trophy" 
+            className="w-12 h-12 mb-2 mx-auto object-contain"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 2, type: "spring" }}
+          />
+          <AnimatedCounter value={totalDestinations} className="text-[#FF5B04] text-3xl font-bold" />
           <div className="text-[#D3DBDD] text-sm">Destinations</div>
-        </div>
+        </motion.div>
         
-        <div className="bg-[#233038] rounded-xl p-6 text-center border border-[#075056] hover:border-[#2563EB] transition-colors">
-          <img src="/images/calendar.webp" alt="Calendar" className="w-12 h-12 mb-2 mx-auto object-contain" />
-          <div className="text-[#2563EB] text-3xl font-bold">{activeQuarters.length}</div>
+        <motion.div 
+          className="bg-[#233038] rounded-xl p-6 text-center border border-[#075056] hover:border-[#2563EB] transition-colors"
+          variants={flip3D}
+          transition={{ delay: 2 }}
+          whileHover={{ scale: 1.05 }}
+        >
+          <motion.img 
+            src="/images/calendar.webp" 
+            alt="Calendar" 
+            className="w-12 h-12 mb-2 mx-auto object-contain"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 2.2, type: "spring" }}
+          />
+          <AnimatedCounter value={activeQuarters.length} className="text-[#2563EB] text-3xl font-bold" />
           <div className="text-[#D3DBDD] text-sm">Quarters Active</div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
       
       {/* Quarter preview with enhanced styling */}
-      <div className="flex justify-center gap-3 mb-6">
-        {(['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).map(q => (
-          <div 
+      <motion.div 
+        className="flex justify-center gap-3 mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 2.4 }}
+      >
+        {(['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).map((q, i) => (
+          <motion.div 
             key={q}
             className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
               quarterlyData[q].length > 0 
                 ? 'bg-[#FF5B04] text-white shadow-lg shadow-[#FF5B04]/30' 
                 : 'bg-[#233038] text-[#D3DBDD] opacity-50'
             }`}
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 2.5 + i * 0.1, type: "spring" }}
+            whileHover={{ scale: 1.1 }}
           >
             {q} {quarterlyData[q].length > 0 && `(${quarterlyData[q].length})`}
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
       
       {/* Fun fact */}
-      <p className="text-[#F4D47C] text-sm mt-2 text-center italic">
+      <motion.p 
+        className="text-[#F4D47C] text-sm mt-2 text-center italic"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 2.9 }}
+      >
         {totalDestinations > 0 
           ? <span className="flex items-center justify-center gap-1">That's {totalDestinations} stamps in your passport! <img src="/images/stamp.webp" alt="Stamp" className="w-5 h-5 inline object-contain" /> {totalPhotos > 0 && <span>• {totalPhotos} memories captured <img src="/images/camera.webp" alt="Camera" className="w-5 h-5 inline object-contain" /></span>}</span>
           : <span className="flex items-center justify-center gap-1">Ready to add some stamps? <img src="/images/stamp.webp" alt="Stamp" className="w-5 h-5 inline object-contain" /></span>
         }
-      </p>
+      </motion.p>
     </div>
   );
 }
@@ -465,57 +594,105 @@ function QuarterIntroSlide({ quarter, quarterName, count, destinations }: { quar
   const photoCount = destinations.reduce((sum, dest) => sum + dest.images.length, 0);
   
   return (
-    <div className="absolute inset-0 bg-gradient-to-br from-[#0B0101] to-[#233038] flex flex-col items-center justify-center p-8 text-[#FDF6E3]">
-      {/* Large 3D seasonal image */}
-      <img 
+    <div className="absolute inset-0 bg-gradient-to-br from-[#0B0101] to-[#233038] flex flex-col items-center justify-center p-8 text-[#FDF6E3] overflow-hidden">
+      {/* Large 3D seasonal image - rotate + scale in */}
+      <motion.img 
         src={info.emoji} 
         alt={quarter} 
         className="w-32 h-32 mb-4 object-contain mx-auto"
+        initial={{ scale: 0, rotate: -180 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: "spring", stiffness: 200, damping: 15, duration: 0.8 }}
       />
       
-      {/* Quarter badge */}
-      <div className="bg-[#FF5B04] text-white px-6 py-2 rounded-full font-bold mb-4 shadow-lg shadow-[#FF5B04]/30">
+      {/* Quarter badge - slide in from top */}
+      <motion.div 
+        className="bg-[#FF5B04] text-white px-6 py-2 rounded-full font-bold mb-4 shadow-lg shadow-[#FF5B04]/30"
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.3, type: "spring" }}
+      >
         {quarter}
-      </div>
+      </motion.div>
       
       {/* Subtitle */}
-      <p className="text-[#D3DBDD] text-lg mb-2">{info.subtitle}</p>
+      <motion.p 
+        className="text-[#D3DBDD] text-lg mb-2"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+      >
+        {info.subtitle}
+      </motion.p>
       
-      {/* Title */}
-      <h2 className="text-4xl font-bold text-[#FDF6E3] mb-3 text-center">
+      {/* Title - character reveal effect */}
+      <motion.h2 
+        className="text-4xl font-bold text-[#FDF6E3] mb-3 text-center"
+        initial={{ opacity: 0, letterSpacing: "0.5em" }}
+        animate={{ opacity: 1, letterSpacing: "0em" }}
+        transition={{ delay: 0.6, duration: 0.8 }}
+      >
         {quarterName}
-      </h2>
+      </motion.h2>
       
-      {/* Fun fact */}
-      <p className="text-[#F4D47C] text-xl mb-8 text-center font-medium">
+      {/* Fun fact - typewriter style */}
+      <motion.p 
+        className="text-[#F4D47C] text-xl mb-8 text-center font-medium"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1 }}
+      >
         {randomFact}
-      </p>
+      </motion.p>
       
-      {/* Stats */}
-      <div className="flex gap-8 mb-8">
-        <div className="text-center">
-          <div className="text-[#FF5B04] text-5xl font-bold">{count}</div>
+      {/* Stats - slide in from sides */}
+      <motion.div 
+        className="flex gap-8 mb-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2 }}
+      >
+        <motion.div 
+          className="text-center"
+          initial={{ x: -50, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 1.3, type: "spring" }}
+        >
+          <AnimatedCounter value={count} className="text-[#FF5B04] text-5xl font-bold" />
           <div className="text-[#D3DBDD] text-sm">
             {count === 1 ? 'Place' : 'Places'}
           </div>
-        </div>
+        </motion.div>
         
         {photoCount > 0 && (
-          <div className="text-center">
-            <div className="text-[#2563EB] text-5xl font-bold">{photoCount}</div>
+          <motion.div 
+            className="text-center"
+            initial={{ x: 50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 1.4, type: "spring" }}
+          >
+            <AnimatedCounter value={photoCount} className="text-[#2563EB] text-5xl font-bold" />
             <div className="text-[#D3DBDD] text-sm">
               {photoCount === 1 ? 'Memory' : 'Memories'}
             </div>
-          </div>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
       
-      {/* Destination chips with enhanced styling */}
-      <div className="flex flex-wrap gap-3 justify-center max-w-2xl">
+      {/* Destination chips - wave cascade */}
+      <motion.div 
+        className="flex flex-wrap gap-3 justify-center max-w-2xl"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
         {destinations.map((dest, idx) => (
-          <div
+          <motion.div
             key={dest.id}
-            className="bg-[#075056] border-2 border-[#F4D47C] px-4 py-2 rounded-full text-[#FDF6E3] flex items-center gap-2 hover:scale-105 transition-transform"
+            className="bg-[#075056] border-2 border-[#F4D47C] px-4 py-2 rounded-full text-[#FDF6E3] flex items-center gap-2"
+            variants={popIn}
+            transition={{ delay: 1.6 + idx * 0.08 }}
+            whileHover={{ scale: 1.1 }}
           >
             <img src="/images/stamp.webp" alt="Pin" className="w-4 h-4 object-contain" />
             <span>
@@ -527,9 +704,9 @@ function QuarterIntroSlide({ quarter, quarterName, count, destinations }: { quar
             {dest.images.length > 0 && (
               <span className="text-[#F4D47C] text-xs flex items-center gap-1">({dest.images.length}<img src="/images/camera.webp" alt="Photos" className="w-3 h-3 object-contain" />)</span>
             )}
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -567,20 +744,35 @@ function DestinationSlide({ destination, quarter }: { destination: TravelDestina
   const locationMessage = getLocationMessage(images.length);
   
   return (
-    <div className="absolute inset-0 bg-black flex flex-col items-center justify-center">
+    <div className="absolute inset-0 bg-black flex flex-col items-center justify-center overflow-hidden">
       {images.length > 0 ? (
         <div className="relative w-full h-full">
-          {/* Full-screen image */}
-          <img 
-            src={images[currentImageIndex]} 
-            alt={displayName}
-            className="w-full h-full object-cover transition-opacity duration-500"
-          />
+          {/* Full-screen image with Ken Burns zoom effect */}
+          <AnimatePresence mode="wait">
+            <motion.img 
+              key={currentImageIndex}
+              src={images[currentImageIndex]} 
+              alt={displayName}
+              className="w-full h-full object-cover"
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{ opacity: 1, scale: 1.05 }}
+              exit={{ opacity: 0 }}
+              transition={{ 
+                opacity: { duration: 0.5 },
+                scale: { duration: 8, ease: "linear" }
+              }}
+            />
+          </AnimatePresence>
           
           {/* Top badges */}
           <div className="absolute top-20 left-6 right-6 flex justify-between items-start z-10">
-            {/* Quarter & Month badge */}
-            <div className="bg-[#FF5B04] text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 shadow-lg">
+            {/* Quarter & Month badge - slide in from left */}
+            <motion.div 
+              className="bg-[#FF5B04] text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 shadow-lg"
+              initial={{ x: -100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.2, type: "spring" }}
+            >
               <span>{quarter}</span>
               {monthName && (
                 <>
@@ -588,52 +780,106 @@ function DestinationSlide({ destination, quarter }: { destination: TravelDestina
                   <span>{monthName}</span>
                 </>
               )}
-            </div>
+            </motion.div>
             
             {/* Image counter if multiple */}
             {images.length > 1 && (
-              <div className="bg-black/60 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-bold">
+              <motion.div 
+                className="bg-black/60 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-bold"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+              >
                 {currentImageIndex + 1} / {images.length}
-              </div>
+              </motion.div>
             )}
           </div>
           
           {/* Bottom overlay with details */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/90 to-transparent p-8 pb-24">
-            {/* Location name */}
-            <h2 className="text-white text-4xl font-bold mb-2">
+          <motion.div 
+            className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/90 to-transparent p-8 pb-24"
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+          >
+            {/* Location name with letter spacing animation */}
+            <motion.h2 
+              className="text-white text-4xl font-bold mb-2"
+              initial={{ opacity: 0, letterSpacing: "0.3em" }}
+              animate={{ opacity: 1, letterSpacing: "0em" }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+            >
               {destination.name}
-            </h2>
+            </motion.h2>
             
             {/* Country if city */}
             {destination.type === 'city' && (
-              <p className="text-white/80 text-xl mb-4">{destination.country}</p>
+              <motion.p 
+                className="text-white/80 text-xl mb-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+              >
+                {destination.country}
+              </motion.p>
             )}
             
             {/* Fun message with accent bar */}
-            <div className="flex items-center gap-3 mb-3">
+            <motion.div 
+              className="flex items-center gap-3 mb-3"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.9 }}
+            >
               <div className="bg-[#FF5B04] w-2 h-8 rounded-full"></div>
               <p className="text-white/90 text-lg font-medium">{locationMessage}</p>
-            </div>
+            </motion.div>
             
             {/* Additional fun fact based on image count */}
             {images.length >= 5 && (
-              <p className="text-[#F4D47C] text-sm italic mt-2">
+              <motion.p 
+                className="text-[#F4D47C] text-sm italic mt-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.2 }}
+              >
                 This place clearly made an impression! 🌟
-              </p>
+              </motion.p>
             )}
             {images.length >= 10 && (
-              <p className="text-[#FF5B04] text-sm font-bold mt-1">
+              <motion.p 
+                className="text-[#FF5B04] text-sm font-bold mt-1"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.4 }}
+              >
                 <span className="flex items-center gap-1">Top destination of the year! <img src="/images/trophy.webp" alt="Trophy" className="w-4 h-4 inline object-contain" /></span>
-              </p>
+              </motion.p>
             )}
-          </div>
+          </motion.div>
         </div>
       ) : (
-        <div className="text-center p-8">
+        <motion.div 
+          className="text-center p-8"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
           <StampCard destination={destination} size="lg" isActive />
-          <h2 className="text-3xl font-bold text-[#FDF6E3] mt-6">{displayName}</h2>
-          <div className="inline-flex items-center gap-2 mt-4 bg-[#FF5B04] px-4 py-2 rounded-full shadow-lg">
+          <motion.h2 
+            className="text-3xl font-bold text-[#FDF6E3] mt-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            {displayName}
+          </motion.h2>
+          <motion.div 
+            className="inline-flex items-center gap-2 mt-4 bg-[#FF5B04] px-4 py-2 rounded-full shadow-lg"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, type: "spring" }}
+          >
             <span className="text-white font-medium">{quarter}</span>
             {monthName && (
               <>
@@ -641,9 +887,16 @@ function DestinationSlide({ destination, quarter }: { destination: TravelDestina
                 <span className="text-white font-medium">{monthName}</span>
               </>
             )}
-          </div>
-          <p className="text-[#D3DBDD] mt-4 text-sm flex items-center justify-center gap-1">No photos uploaded for this destination <img src="/images/camera.webp" alt="Camera" className="w-4 h-4 object-contain" /></p>
-        </div>
+          </motion.div>
+          <motion.p 
+            className="text-[#D3DBDD] mt-4 text-sm flex items-center justify-center gap-1"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+          >
+            No photos uploaded for this destination <img src="/images/camera.webp" alt="Camera" className="w-4 h-4 object-contain" />
+          </motion.p>
+        </motion.div>
       )}
     </div>
   );
@@ -660,50 +913,136 @@ function SummaryIntroSlide({ data, quarterlyData }: { data: TravelRecapData; qua
   const randomMessage = OPENING_LINES[openingIndex];
   
   return (
-    <div className="absolute inset-0 bg-[#0B0101] flex flex-col items-center justify-center p-8">
-      {/* Party popper icon */}
-      <img src="/images/party-popper.webp" alt="Celebration" className="w-24 h-24 mb-6 object-contain" />
+    <div className="absolute inset-0 bg-[#0B0101] flex flex-col items-center justify-center p-8 overflow-hidden">
+      {/* Party popper icon - explode in effect */}
+      <motion.img 
+        src="/images/party-popper.webp" 
+        alt="Celebration" 
+        className="w-24 h-24 mb-6 object-contain"
+        initial={{ scale: 0, rotate: -180 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: "spring", stiffness: 200, damping: 15 }}
+      />
       
-      {/* Title */}
-      <h1 className="text-5xl font-bold text-[#FDF6E3] mb-3 text-center">
+      {/* Title - dramatic scale + fade */}
+      <motion.h1 
+        className="text-5xl font-bold text-[#FDF6E3] mb-3 text-center"
+        initial={{ opacity: 0, scale: 0.5 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.3, duration: 0.6, type: "spring" }}
+      >
         Your 2025 Journey
-      </h1>
+      </motion.h1>
       
-      {/* Username */}
-      <p className="text-[#FF5B04] text-2xl mb-6">@{data.profile.username}</p>
+      {/* Username - slide in from right */}
+      <motion.p 
+        className="text-[#FF5B04] text-2xl mb-6"
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.6 }}
+      >
+        @{data.profile.username}
+      </motion.p>
       
       {/* Powered by */}
-      <p className="text-[#D3DBDD] text-sm mb-8">Powered by Stamped Recap</p>
+      <motion.p 
+        className="text-[#D3DBDD] text-sm mb-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8 }}
+      >
+        Powered by Stamped Recap
+      </motion.p>
       
-      {/* Fun message */}
-      <p className="text-[#FDF6E3] text-xl italic mb-12 text-center whitespace-pre-line">{randomMessage}</p>
+      {/* Fun message - typewriter style */}
+      <motion.p 
+        className="text-[#FDF6E3] text-xl italic mb-12 text-center whitespace-pre-line"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1 }}
+      >
+        {randomMessage}
+      </motion.p>
       
-      {/* Stats grid - 2x2 */}
-      <div className="grid grid-cols-2 gap-4 w-full max-w-md">
-        <div className="bg-[#233038] rounded-2xl p-6 text-center">
-          <img src="/images/total-destinations.webp" alt="Destinations" className="w-12 h-12 mx-auto mb-3 object-contain" />
-          <div className="text-[#FF5B04] text-4xl font-bold">{data.destinations.length}</div>
+      {/* Stats grid - 2x2 with staggered 3D flip reveal */}
+      <motion.div 
+        className="grid grid-cols-2 gap-4 w-full max-w-md"
+        variants={staggerContainerSlow}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div 
+          className="bg-[#233038] rounded-2xl p-6 text-center"
+          variants={flip3D}
+          transition={{ delay: 1.2 }}
+          whileHover={{ scale: 1.05 }}
+        >
+          <motion.img 
+            src="/images/total-destinations.webp" 
+            alt="Destinations" 
+            className="w-12 h-12 mx-auto mb-3 object-contain"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 1.4, type: "spring" }}
+          />
+          <AnimatedCounter value={data.destinations.length} className="text-[#FF5B04] text-4xl font-bold" />
           <div className="text-[#D3DBDD]">Total Destinations</div>
-        </div>
+        </motion.div>
         
-        <div className="bg-[#233038] rounded-2xl p-6 text-center">
-          <img src="/images/camera.webp" alt="Photos" className="w-12 h-12 mx-auto mb-3 object-contain" />
-          <div className="text-[#2563EB] text-4xl font-bold">{totalPhotos}</div>
+        <motion.div 
+          className="bg-[#233038] rounded-2xl p-6 text-center"
+          variants={flip3D}
+          transition={{ delay: 1.4 }}
+          whileHover={{ scale: 1.05 }}
+        >
+          <motion.img 
+            src="/images/camera.webp" 
+            alt="Photos" 
+            className="w-12 h-12 mx-auto mb-3 object-contain"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 1.6, type: "spring" }}
+          />
+          <AnimatedCounter value={totalPhotos} className="text-[#2563EB] text-4xl font-bold" />
           <div className="text-[#D3DBDD]">Memories Captured</div>
-        </div>
+        </motion.div>
         
-        <div className="bg-[#233038] rounded-2xl p-6 text-center">
-          <img src="/images/world-map.webp" alt="Countries" className="w-12 h-12 mx-auto mb-3 object-contain" />
-          <div className="text-[#F4D47C] text-4xl font-bold">{countries.length}</div>
+        <motion.div 
+          className="bg-[#233038] rounded-2xl p-6 text-center"
+          variants={flip3D}
+          transition={{ delay: 1.6 }}
+          whileHover={{ scale: 1.05 }}
+        >
+          <motion.img 
+            src="/images/world-map.webp" 
+            alt="Countries" 
+            className="w-12 h-12 mx-auto mb-3 object-contain"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 1.8, type: "spring" }}
+          />
+          <AnimatedCounter value={countries.length} className="text-[#F4D47C] text-4xl font-bold" />
           <div className="text-[#D3DBDD]">{countries.length === 1 ? 'Country' : 'Countries'}</div>
-        </div>
+        </motion.div>
         
-        <div className="bg-[#233038] rounded-2xl p-6 text-center">
-          <img src="/images/city-skyline.webp" alt="Cities" className="w-12 h-12 mx-auto mb-3 object-contain" />
-          <div className="text-[#075056] text-4xl font-bold">{cities.length}</div>
+        <motion.div 
+          className="bg-[#233038] rounded-2xl p-6 text-center"
+          variants={flip3D}
+          transition={{ delay: 1.8 }}
+          whileHover={{ scale: 1.05 }}
+        >
+          <motion.img 
+            src="/images/city-skyline.webp" 
+            alt="Cities" 
+            className="w-12 h-12 mx-auto mb-3 object-contain"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 2, type: "spring" }}
+          />
+          <AnimatedCounter value={cities.length} className="text-[#075056] text-4xl font-bold" />
           <div className="text-[#D3DBDD]">{cities.length === 1 ? 'City' : 'Cities'}</div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
@@ -717,41 +1056,109 @@ function TopSpotSlide({ data }: { data: TravelRecapData }) {
   
   if (!mostVisited || mostVisited.images.length === 0) {
     return (
-      <div className="absolute inset-0 bg-gradient-to-br from-[#FF5B04] to-[#E54F03] flex flex-col items-center justify-center p-8">
-        <img src="/images/trophy.webp" alt="Trophy" className="w-24 h-24 mb-6 object-contain" />
-        <h2 className="text-white text-2xl font-bold mb-4">Your Top Spot</h2>
-        <p className="text-white/80 text-xl">No photos uploaded yet!</p>
-        <p className="text-white/60 mt-4">Add photos to see your favorite destination</p>
-      </div>
+      <motion.div 
+        className="absolute inset-0 bg-gradient-to-br from-[#FF5B04] to-[#E54F03] flex flex-col items-center justify-center p-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <motion.img 
+          src="/images/trophy.webp" 
+          alt="Trophy" 
+          className="w-24 h-24 mb-6 object-contain"
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 200 }}
+        />
+        <motion.h2 
+          className="text-white text-2xl font-bold mb-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          Your Top Spot
+        </motion.h2>
+        <motion.p 
+          className="text-white/80 text-xl"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          No photos uploaded yet!
+        </motion.p>
+        <motion.p 
+          className="text-white/60 mt-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+        >
+          Add photos to see your favorite destination
+        </motion.p>
+      </motion.div>
     );
   }
   
   return (
-    <div className="absolute inset-0 bg-gradient-to-br from-[#FF5B04] to-[#E54F03] flex flex-col items-center justify-center p-8">
-      {/* Trophy icon */}
-      <img src="/images/trophy.webp" alt="Trophy" className="w-24 h-24 mb-6 object-contain" />
+    <div className="absolute inset-0 bg-gradient-to-br from-[#FF5B04] to-[#E54F03] flex flex-col items-center justify-center p-8 overflow-hidden">
+      {/* Trophy icon - drop from top + bounce + shine */}
+      <motion.img 
+        src="/images/trophy.webp" 
+        alt="Trophy" 
+        className="w-24 h-24 mb-6 object-contain"
+        initial={{ y: -200, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 200, damping: 15 }}
+      />
       
-      {/* Header */}
-      <h2 className="text-white text-2xl font-bold mb-12 flex items-center gap-2">
+      {/* Header - slide in from left */}
+      <motion.h2 
+        className="text-white text-2xl font-bold mb-12 flex items-center gap-2"
+        initial={{ x: -100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ delay: 0.3, type: "spring" }}
+      >
         <img src="/images/trophy.webp" alt="Trophy" className="w-8 h-8 object-contain" />
         Your Top Spot
-      </h2>
+      </motion.h2>
       
-      {/* Location name - large */}
-      <h1 className="text-white text-6xl font-bold text-center mb-6">
+      {/* Location name - split reveal with glow */}
+      <motion.h1 
+        className="text-white text-6xl font-bold text-center mb-6"
+        initial={{ opacity: 0, letterSpacing: "0.5em", textShadow: "0 0 0px rgba(255,255,255,0)" }}
+        animate={{ opacity: 1, letterSpacing: "0em", textShadow: "0 0 30px rgba(255,255,255,0.5)" }}
+        transition={{ delay: 0.6, duration: 1 }}
+      >
         {mostVisited.name}
-      </h1>
+      </motion.h1>
       
       {/* Country if city */}
       {mostVisited.type === 'city' && (
-        <p className="text-white/90 text-3xl mb-12">{mostVisited.country}</p>
+        <motion.p 
+          className="text-white/90 text-3xl mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1 }}
+        >
+          {mostVisited.country}
+        </motion.p>
       )}
       
-      {/* Stats */}
-      <p className="text-white text-2xl flex items-center gap-2">
+      {/* Stats - typewriter with emoji pop */}
+      <motion.p 
+        className="text-white text-2xl flex items-center gap-2"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.3 }}
+      >
         {mostVisited.images.length} photos • You couldn't get enough! 
-        <img src="/images/party-popper.webp" alt="Love" className="w-8 h-8 object-contain" />
-      </p>
+        <motion.img 
+          src="/images/party-popper.webp" 
+          alt="Love" 
+          className="w-8 h-8 object-contain"
+          initial={{ scale: 0, rotate: -45 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ delay: 1.6, type: "spring", stiffness: 300 }}
+        />
+      </motion.p>
     </div>
   );
 }
@@ -762,11 +1169,36 @@ function BusiestQuarterSlide({ quarterlyData }: { quarterlyData: QuarterlyData }
   
   if (activeQuarters.length === 0) {
     return (
-      <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB] to-[#1E40AF] flex flex-col items-center justify-center p-8">
-        <img src="/images/calendar.webp" alt="Calendar" className="w-24 h-24 mb-6 object-contain" />
-        <h2 className="text-white text-2xl font-bold mb-4">Busiest Quarter</h2>
-        <p className="text-white/80 text-xl">No destinations tagged yet!</p>
-      </div>
+      <motion.div 
+        className="absolute inset-0 bg-gradient-to-br from-[#2563EB] to-[#1E40AF] flex flex-col items-center justify-center p-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <motion.img 
+          src="/images/calendar.webp" 
+          alt="Calendar" 
+          className="w-24 h-24 mb-6 object-contain"
+          initial={{ rotateY: 90, opacity: 0 }}
+          animate={{ rotateY: 0, opacity: 1 }}
+          transition={{ type: "spring" }}
+        />
+        <motion.h2 
+          className="text-white text-2xl font-bold mb-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          Busiest Quarter
+        </motion.h2>
+        <motion.p 
+          className="text-white/80 text-xl"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          No destinations tagged yet!
+        </motion.p>
+      </motion.div>
     );
   }
   
@@ -774,41 +1206,96 @@ function BusiestQuarterSlide({ quarterlyData }: { quarterlyData: QuarterlyData }
     quarterlyData[q].length > quarterlyData[max].length ? q : max, activeQuarters[0]);
   
   return (
-    <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB] to-[#1E40AF] flex flex-col items-center justify-center p-8">
-      {/* Calendar icon */}
-      <img src="/images/calendar.webp" alt="Calendar" className="w-24 h-24 mb-6 object-contain" />
+    <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB] to-[#1E40AF] flex flex-col items-center justify-center p-8 overflow-hidden">
+      {/* Calendar icon - flip in */}
+      <motion.img 
+        src="/images/calendar.webp" 
+        alt="Calendar" 
+        className="w-24 h-24 mb-6 object-contain"
+        initial={{ rotateY: 90, opacity: 0 }}
+        animate={{ rotateY: 0, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 200 }}
+      />
       
       {/* Header */}
-      <h2 className="text-white text-2xl font-bold mb-12 flex items-center gap-2">
+      <motion.h2 
+        className="text-white text-2xl font-bold mb-12 flex items-center gap-2"
+        initial={{ x: -50, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ delay: 0.3 }}
+      >
         <img src="/images/calendar.webp" alt="Calendar" className="w-8 h-8 object-contain" />
         Busiest Quarter
-      </h2>
+      </motion.h2>
       
-      {/* Quarter name */}
-      <h1 className="text-white text-6xl font-bold mb-6">
+      {/* Quarter name - pulse + glow */}
+      <motion.h1 
+        className="text-white text-6xl font-bold mb-6"
+        initial={{ scale: 0.5, opacity: 0 }}
+        animate={{ 
+          scale: 1, 
+          opacity: 1,
+          textShadow: ["0 0 0px rgba(255,255,255,0)", "0 0 20px rgba(255,255,255,0.5)", "0 0 0px rgba(255,255,255,0)"]
+        }}
+        transition={{ 
+          scale: { delay: 0.5, type: "spring" },
+          textShadow: { delay: 0.8, duration: 1.5, repeat: Infinity }
+        }}
+      >
         {busiestQuarter}
-      </h1>
+      </motion.h1>
       
-      <p className="text-white/90 text-3xl mb-12">
+      {/* Quarter name - letter spacing expand */}
+      <motion.p 
+        className="text-white/90 text-3xl mb-12"
+        initial={{ opacity: 0, letterSpacing: "-0.1em" }}
+        animate={{ opacity: 1, letterSpacing: "0.05em" }}
+        transition={{ delay: 0.8, duration: 0.6 }}
+      >
         {QUARTER_NAMES[busiestQuarter]}
-      </p>
+      </motion.p>
       
-      {/* Stats */}
-      <p className="text-white text-2xl mb-8 flex items-center gap-2">
+      {/* Stats - count up */}
+      <motion.p 
+        className="text-white text-2xl mb-8 flex items-center gap-2"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.2 }}
+      >
         {quarterlyData[busiestQuarter].length} destinations • You were on fire! 🔥
-      </p>
+      </motion.p>
       
-      {/* Quarter breakdown mini grid */}
-      <div className="grid grid-cols-4 gap-3 mt-8">
-        {(['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).map(q => (
-          <div key={q} className={`rounded-xl p-4 text-center ${q === busiestQuarter ? 'bg-white' : 'bg-white/20'}`}>
+      {/* Quarter breakdown mini grid - wave cascade */}
+      <motion.div 
+        className="grid grid-cols-4 gap-3 mt-8"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.4 }}
+      >
+        {(['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).map((q, i) => (
+          <motion.div 
+            key={q} 
+            className={`rounded-xl p-4 text-center ${q === busiestQuarter ? 'bg-white' : 'bg-white/20'}`}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ 
+              scale: 1, 
+              opacity: 1,
+              boxShadow: q === busiestQuarter ? ["0 0 0px rgba(255,255,255,0)", "0 0 15px rgba(255,255,255,0.5)", "0 0 0px rgba(255,255,255,0)"] : "none"
+            }}
+            transition={{ 
+              delay: 1.5 + i * 0.1, 
+              type: "spring",
+              boxShadow: q === busiestQuarter ? { delay: 1.8, duration: 1.5, repeat: Infinity } : {}
+            }}
+            whileHover={{ scale: 1.1 }}
+          >
             <div className={`text-3xl font-bold ${q === busiestQuarter ? 'text-[#2563EB]' : 'text-white'}`}>
               {quarterlyData[q]?.length || 0}
             </div>
             <div className={`text-sm ${q === busiestQuarter ? 'text-[#2563EB]' : 'text-white/80'}`}>{q}</div>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -816,27 +1303,60 @@ function BusiestQuarterSlide({ quarterlyData }: { quarterlyData: QuarterlyData }
 // Summary Slide 4: Quarter by Quarter
 function QuarterBreakdownSlide({ quarterlyData }: { quarterlyData: QuarterlyData }) {
   return (
-    <div className="absolute inset-0 bg-[#0B0101] flex flex-col items-center justify-center p-8">
-      {/* Header */}
-      <h2 className="text-[#FDF6E3] text-3xl font-bold mb-8 text-center flex items-center gap-2">
-        <img src="/images/chart.webp" alt="Chart" className="w-10 h-10 object-contain" />
+    <div className="absolute inset-0 bg-[#0B0101] flex flex-col items-center justify-center p-8 overflow-hidden">
+      {/* Header - slide in */}
+      <motion.h2 
+        className="text-[#FDF6E3] text-3xl font-bold mb-8 text-center flex items-center gap-2"
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: "spring" }}
+      >
+        <motion.img 
+          src="/images/chart.webp" 
+          alt="Chart" 
+          className="w-10 h-10 object-contain"
+          initial={{ rotate: -90, scale: 0 }}
+          animate={{ rotate: 0, scale: 1 }}
+          transition={{ delay: 0.2, type: "spring" }}
+        />
         Quarter by Quarter
-      </h2>
+      </motion.h2>
       
-      {/* Large quarter grid */}
-      <div className="grid grid-cols-2 gap-6 w-full max-w-md">
-        {(['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).map(q => (
-          <div key={q} className="bg-[#233038] rounded-2xl p-8 text-center border-2 border-[#075056]">
-            <div className="text-[#FF5B04] text-7xl font-bold mb-3">
-              {quarterlyData[q]?.length || 0}
-            </div>
-            <div className="text-[#D3DBDD] text-xl font-semibold">{q}</div>
-            <div className="text-[#D3DBDD]/60 text-sm mt-1">
+      {/* Large quarter grid - 3D flip reveal in sequence */}
+      <motion.div 
+        className="grid grid-cols-2 gap-6 w-full max-w-md"
+        variants={staggerContainerSlow}
+        initial="hidden"
+        animate="visible"
+      >
+        {(['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).map((q, i) => (
+          <motion.div 
+            key={q} 
+            className="bg-[#233038] rounded-2xl p-8 text-center border-2 border-[#075056]"
+            variants={flip3D}
+            transition={{ delay: 0.4 + i * 0.2 }}
+            whileHover={{ scale: 1.05, borderColor: "#FF5B04" }}
+          >
+            <AnimatedCounter value={quarterlyData[q]?.length || 0} className="text-[#FF5B04] text-7xl font-bold mb-3" />
+            <motion.div 
+              className="text-[#D3DBDD] text-xl font-semibold"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 + i * 0.2 }}
+            >
+              {q}
+            </motion.div>
+            <motion.div 
+              className="text-[#D3DBDD]/60 text-sm mt-1"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 + i * 0.2 }}
+            >
               {quarterlyData[q]?.length === 1 ? 'place' : 'places'}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -846,67 +1366,162 @@ function StampCollectionSlide({ data, onShare, onRestart }: { data: TravelRecapD
   return (
     <div className="absolute inset-0 bg-[#0B0101] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
       <div className="p-8 pb-32">
-        {/* Header */}
-        <h2 className="text-[#FDF6E3] text-3xl font-bold mb-6 text-center flex items-center justify-center gap-2">
-          <img src="/images/stamp.webp" alt="Stamp" className="w-10 h-10 object-contain" />
+        {/* Header - slide in */}
+        <motion.h2 
+          className="text-[#FDF6E3] text-3xl font-bold mb-6 text-center flex items-center justify-center gap-2"
+          initial={{ y: -30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: "spring" }}
+        >
+          <motion.img 
+            src="/images/stamp.webp" 
+            alt="Stamp" 
+            className="w-10 h-10 object-contain"
+            initial={{ rotate: -45, scale: 0 }}
+            animate={{ rotate: 0, scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+          />
           Your Stamp Collection
-        </h2>
+        </motion.h2>
         
         {data.destinations.length > 0 ? (
           <>
-            {/* Stamps grid */}
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              {data.destinations.map((dest) => (
-                <StampCard key={dest.id} destination={dest} />
+            {/* Stamps grid - masonry cascade with stamp thud effect */}
+            <motion.div 
+              className="grid grid-cols-2 gap-4 mb-8"
+              variants={staggerContainer}
+              initial="hidden"
+              animate="visible"
+            >
+              {data.destinations.map((dest, i) => (
+                <motion.div
+                  key={dest.id}
+                  variants={stampThud}
+                  transition={{ delay: 0.3 + i * 0.1 }}
+                  whileHover={{ scale: 1.05, rotate: 2 }}
+                >
+                  <StampCard destination={dest} />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
             
-            {/* Final message */}
-            <div className="bg-[#075056] border-l-4 border-[#F4D47C] rounded-lg p-6 text-center mb-6">
+            {/* Final message - slide up from bottom */}
+            <motion.div 
+              className="bg-[#075056] border-l-4 border-[#F4D47C] rounded-lg p-6 text-center mb-6"
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5 + data.destinations.length * 0.1 }}
+            >
               <p className="text-[#FDF6E3] text-xl mb-2 flex items-center justify-center gap-2">
                 What a year, @{data.profile.username}! 
-                <img src="/images/party-popper.webp" alt="Party" className="w-6 h-6 object-contain" />
+                <motion.img 
+                  src="/images/party-popper.webp" 
+                  alt="Party" 
+                  className="w-6 h-6 object-contain"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.8 + data.destinations.length * 0.1, type: "spring" }}
+                />
               </p>
               <p className="text-[#D3DBDD] flex items-center justify-center gap-1">
                 Can't wait to see where 2026 takes you! 
-                <img src="/images/airplane.webp" alt="Plane" className="w-5 h-5 object-contain" />
+                <motion.img 
+                  src="/images/airplane.webp" 
+                  alt="Plane" 
+                  className="w-5 h-5 object-contain"
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 1 + data.destinations.length * 0.1 }}
+                />
               </p>
-            </div>
+            </motion.div>
           </>
         ) : (
-          <div className="text-center py-12">
-            <img src="/images/world-map.webp" alt="World Map" className="w-16 h-16 mb-4 mx-auto object-contain" />
+          <motion.div 
+            className="text-center py-12"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <motion.img 
+              src="/images/world-map.webp" 
+              alt="World Map" 
+              className="w-16 h-16 mb-4 mx-auto object-contain"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring" }}
+            />
             <div className="w-20 h-20 bg-[#233038] rounded-2xl flex items-center justify-center mx-auto mb-4">
               <MapPin className="w-10 h-10 text-[#D3DBDD]" />
             </div>
-            <p className="text-[#FDF6E3] text-xl font-bold mb-2">No destinations tagged yet</p>
-            <p className="text-[#D3DBDD] text-sm opacity-70">Go back and tag your travel photos!</p>
-            <p className="text-[#F4D47C] text-sm mt-4 italic flex items-center justify-center gap-1">
+            <motion.p 
+              className="text-[#FDF6E3] text-xl font-bold mb-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              No destinations tagged yet
+            </motion.p>
+            <motion.p 
+              className="text-[#D3DBDD] text-sm opacity-70"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              Go back and tag your travel photos!
+            </motion.p>
+            <motion.p 
+              className="text-[#F4D47C] text-sm mt-4 italic flex items-center justify-center gap-1"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
+            >
               Your adventure awaits! 
               <img src="/images/party-popper.webp" alt="Sparkles" className="w-4 h-4 object-contain" />
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
         )}
       </div>
       
-      {/* Fixed bottom buttons */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#233038] p-6 space-y-3">
-        <Button 
-          onClick={onShare}
-          disabled={data.destinations.length === 0}
-          className="w-full h-14 bg-[#FF5B04] hover:bg-[#E54F03] rounded-xl font-bold text-lg disabled:bg-[#233038] disabled:text-[#D3DBDD] transition-all"
+      {/* Fixed bottom buttons - staggered scale in */}
+      <motion.div 
+        className="fixed bottom-0 left-0 right-0 bg-[#233038] p-6 space-y-3"
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        transition={{ delay: 0.8, type: "spring" }}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 1 }}
+          whileHover={{ scale: data.destinations.length > 0 ? 1.02 : 1 }}
+          whileTap={{ scale: data.destinations.length > 0 ? 0.98 : 1 }}
         >
-          <Download className="w-6 h-6 mr-2" />
-          Download My Recap
-        </Button>
-        <Button 
-          onClick={onRestart}
-          variant="outline"
-          className="w-full h-14 border-2 border-[#D3DBDD] text-[#D3DBDD] hover:border-[#FF5B04] hover:text-[#FF5B04] bg-transparent rounded-xl font-semibold text-lg transition-all"
+          <Button 
+            onClick={onShare}
+            disabled={data.destinations.length === 0}
+            className="w-full h-14 bg-[#FF5B04] hover:bg-[#E54F03] rounded-xl font-bold text-lg disabled:bg-[#233038] disabled:text-[#D3DBDD] transition-all"
+          >
+            <Download className="w-6 h-6 mr-2" />
+            Download My Recap
+          </Button>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 1.1 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          Create Another
-        </Button>
-      </div>
+          <Button 
+            onClick={onRestart}
+            variant="outline"
+            className="w-full h-14 border-2 border-[#D3DBDD] text-[#D3DBDD] hover:border-[#FF5B04] hover:text-[#FF5B04] bg-transparent rounded-xl font-semibold text-lg transition-all"
+          >
+            Create Another
+          </Button>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

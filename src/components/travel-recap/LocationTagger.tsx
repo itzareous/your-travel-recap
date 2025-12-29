@@ -1,8 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TravelImage, TravelDestination, COUNTRIES } from "./types";
 import { ArrowLeft, ArrowRight, Globe, Building2, Check, ChevronDown, Search } from "lucide-react";
+import { fadeInUp, slideInUp, scaleInBounce, staggerContainer, popIn } from "@/utils/animations";
 
 interface LocationTaggerProps {
   images: TravelImage[];
@@ -179,159 +181,281 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
 
   if (currentIndex >= taggedImages.length) {
     return (
-      <div className="min-h-screen bg-[#0B0101] flex flex-col items-center justify-center p-4">
+      <motion.div 
+        className="min-h-screen bg-[#0B0101] flex flex-col items-center justify-center p-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="text-center">
-          <div className="w-20 h-20 bg-[#075056] rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Check className="w-10 h-10 text-[#2563EB]" />
-          </div>
-          <h2 className="text-3xl font-bold text-[#FDF6E3] mb-2">All done!</h2>
-          <p className="text-[#D3DBDD] mb-6">
-            {taggedCount} images tagged
-          </p>
-          <Button
-            onClick={generateDestinations}
-            className="h-12 px-8 rounded-full bg-[#FF5B04] hover:bg-[#E54F03] text-white font-medium transition-colors"
+          <motion.div 
+            className="w-20 h-20 bg-[#075056] rounded-2xl flex items-center justify-center mx-auto mb-4"
+            variants={scaleInBounce}
+            initial="hidden"
+            animate="visible"
           >
-            Generate My Recap
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </Button>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
+            >
+              <Check className="w-10 h-10 text-[#2563EB]" />
+            </motion.div>
+          </motion.div>
+          <motion.h2 
+            className="text-3xl font-bold text-[#FDF6E3] mb-2"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            All done!
+          </motion.h2>
+          <motion.p 
+            className="text-[#D3DBDD] mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            {taggedCount} images tagged
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6, type: "spring" }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Button
+              onClick={generateDestinations}
+              className="h-12 px-8 rounded-full bg-[#FF5B04] hover:bg-[#E54F03] text-white font-medium transition-colors"
+            >
+              Generate My Recap
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#0B0101] flex flex-col">
       {/* Fixed Top Navigation Bar */}
-      <div className="fixed top-0 left-0 right-0 bg-[#0B0101] border-b border-[#233038] p-4 flex items-center justify-between z-10">
+      <motion.div 
+        className="fixed top-0 left-0 right-0 bg-[#0B0101] border-b border-[#233038] p-4 flex items-center justify-between z-10"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
         {/* Back button - left */}
-        <button 
+        <motion.button 
           onClick={onBack}
           className="p-2 hover:bg-[#233038] rounded-full transition-colors"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
         >
           <ArrowLeft className="w-6 h-6 text-[#D3DBDD]" />
-        </button>
+        </motion.button>
         
         {/* Step indicator - center */}
-        <div className="text-center">
+        <motion.div 
+          className="text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
           <p className="text-[#D3DBDD] text-sm">
             Step 4 of 4 • Image {currentIndex + 1} of {taggedImages.length}
           </p>
-        </div>
+        </motion.div>
         
         {/* Next button - right */}
-        <button
+        <motion.button
           onClick={hasSuggestion && showSuggestion ? confirmSuggestion : saveLocation}
           disabled={
             (!hasSuggestion && !showSuggestion && locationType === 'country' && !selectedCountry) ||
             (!hasSuggestion && !showSuggestion && locationType === 'city' && (!cityName.trim() || !selectedCountry))
           }
           className="text-[#FF5B04] hover:text-[#E54F03] disabled:text-[#233038] disabled:cursor-not-allowed font-semibold flex items-center gap-1 transition-colors"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           {isLastImage ? 'Done' : 'Next'}
           <ArrowRight className="w-5 h-5" />
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
 
       {/* Main Content - with padding for fixed header and footer */}
       <div className="pt-20 pb-36 flex-1 overflow-y-auto">
         {/* Progress dots */}
-        <div className="flex justify-center gap-1 py-4 px-4 flex-wrap">
+        <motion.div 
+          className="flex justify-center gap-1 py-4 px-4 flex-wrap"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+        >
           {taggedImages.map((img, i) => (
-            <div 
+            <motion.div 
               key={img.id}
-              className={`h-2 rounded-full transition-all ${
+              className={`h-2 rounded-full ${
                 i === currentIndex 
                   ? 'w-6 bg-[#FF5B04]' 
                   : i < currentIndex 
                     ? img.location ? 'w-2 bg-[#2563EB]' : 'w-2 bg-[#233038]'
                     : 'w-2 bg-[#233038]'
               }`}
+              initial={i === currentIndex ? { width: 8 } : {}}
+              animate={i === currentIndex ? { width: 24 } : {}}
+              transition={{ duration: 0.3 }}
             />
           ))}
-        </div>
+        </motion.div>
 
         {/* Image container - takes most of the space */}
         <div className="relative px-4">
           <div className="relative max-w-2xl mx-auto">
-            <img 
-              src={currentImage.preview} 
-              alt="Travel memory"
-              className="w-full h-[55vh] md:h-[50vh] object-contain rounded-2xl border-4 border-[#233038]"
-            />
+            <AnimatePresence mode="wait">
+              <motion.img 
+                key={currentImage.id}
+                src={currentImage.preview} 
+                alt="Travel memory"
+                className="w-full h-[55vh] md:h-[50vh] object-contain rounded-2xl border-4 border-[#233038]"
+                initial={{ opacity: 0, scale: 1.05 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.4 }}
+              />
+            </AnimatePresence>
             
             {/* Location suggestion overlay - positioned at bottom of image */}
-            {hasSuggestion && showSuggestion && (
-              <div className="absolute bottom-4 left-4 right-4 bg-[#075056]/95 border-l-4 border-[#F4D47C] rounded-lg p-4 backdrop-blur-sm">
-                <p className="text-[#FDF6E3] text-sm mb-1 flex items-center gap-1">
-                  <img src="/images/stamp.webp" alt="Location" className="w-4 h-4 inline object-contain" /> We detected this might be from
-                </p>
-                <p className="text-[#F4D47C] text-lg font-bold">
-                  {currentImage.geoTag?.suggestedCity 
-                    ? `${currentImage.geoTag.suggestedCity}, ${currentImage.geoTag.suggestedCountry}`
-                    : currentImage.geoTag?.suggestedCountry}
-                </p>
-              </div>
-            )}
+            <AnimatePresence>
+              {hasSuggestion && showSuggestion && (
+                <motion.div 
+                  className="absolute bottom-4 left-4 right-4 bg-[#075056]/95 border-l-4 border-[#F4D47C] rounded-lg p-4 backdrop-blur-sm"
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 50 }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                >
+                  <motion.p 
+                    className="text-[#FDF6E3] text-sm mb-1 flex items-center gap-1"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <img src="/images/stamp.webp" alt="Location" className="w-4 h-4 inline object-contain" /> We detected this might be from
+                  </motion.p>
+                  <motion.p 
+                    className="text-[#F4D47C] text-lg font-bold"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    {currentImage.geoTag?.suggestedCity 
+                      ? `${currentImage.geoTag.suggestedCity}, ${currentImage.geoTag.suggestedCountry}`
+                      : currentImage.geoTag?.suggestedCountry}
+                  </motion.p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
 
       {/* Fixed Footer with Action Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#233038] border-t border-[#075056] p-4 z-10">
+      <motion.div 
+        className="fixed bottom-0 left-0 right-0 bg-[#233038] border-t border-[#075056] p-4 z-10"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+      >
         {/* Show confirm/change buttons when suggestion exists */}
-        {hasSuggestion && showSuggestion ? (
-          <div className="flex gap-3 max-w-2xl mx-auto">
-            {/* Confirm button */}
-            <button
-              onClick={confirmSuggestion}
-              className="flex-1 bg-[#2563EB] hover:bg-[#1E40AF] text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all"
+        <AnimatePresence mode="wait">
+          {hasSuggestion && showSuggestion ? (
+            <motion.div 
+              key="suggestion-buttons"
+              className="flex gap-3 max-w-2xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
             >
-              <Check className="w-5 h-5" />
-              Confirm
-            </button>
-            
-            {/* Change Location button */}
-            <button
-              onClick={() => {
-                setShowSuggestion(false);
-                if (currentImage.geoTag?.suggestedCountry) {
-                  setSelectedCountry(currentImage.geoTag.suggestedCountry);
-                }
-              }}
-              className="flex-1 bg-transparent border-2 border-[#D3DBDD] text-[#D3DBDD] hover:border-[#FF5B04] hover:text-[#FF5B04] py-4 rounded-xl font-semibold transition-all"
-            >
-              Change Location
-            </button>
-          </div>
-        ) : (
+              {/* Confirm button */}
+              <motion.button
+                onClick={confirmSuggestion}
+                className="flex-1 bg-[#2563EB] hover:bg-[#1E40AF] text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <Check className="w-5 h-5" />
+                Confirm
+              </motion.button>
+              
+              {/* Change Location button */}
+              <motion.button
+                onClick={() => {
+                  setShowSuggestion(false);
+                  if (currentImage.geoTag?.suggestedCountry) {
+                    setSelectedCountry(currentImage.geoTag.suggestedCountry);
+                  }
+                }}
+                className="flex-1 bg-transparent border-2 border-[#D3DBDD] text-[#D3DBDD] hover:border-[#FF5B04] hover:text-[#FF5B04] py-4 rounded-xl font-semibold transition-all"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                Change Location
+              </motion.button>
+            </motion.div>
+          ) : (
           // Manual input form in footer
-          <div className="max-w-2xl mx-auto space-y-3">
+          <motion.div 
+            key="manual-form"
+            className="max-w-2xl mx-auto space-y-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
             {/* Type toggle */}
-            <div className="flex gap-2 bg-[#0B0101] rounded-lg p-1">
-              <button
+            <motion.div 
+              className="flex gap-2 bg-[#0B0101] rounded-lg p-1"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <motion.button
                 onClick={() => setLocationType('city')}
                 className={`flex-1 py-2 rounded-md font-medium transition-all flex items-center justify-center gap-2 ${
                   locationType === 'city'
                     ? 'bg-[#FF5B04] text-white'
                     : 'text-[#D3DBDD]'
                 }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
                 <Building2 className="w-4 h-4" />
                 City
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={() => setLocationType('country')}
                 className={`flex-1 py-2 rounded-md font-medium transition-all flex items-center justify-center gap-2 ${
                   locationType === 'country'
                     ? 'bg-[#FF5B04] text-white'
                     : 'text-[#D3DBDD]'
                 }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
                 <Globe className="w-4 h-4" />
                 Country
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
             
             {/* Input fields */}
             {locationType === 'city' ? (
@@ -446,12 +570,22 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
             )}
             
             {/* Error message */}
-            {error && (
-              <p className="text-[#FF5B04] text-sm text-center">{error}</p>
-            )}
-          </div>
+            <AnimatePresence>
+              {error && (
+                <motion.p 
+                  className="text-[#FF5B04] text-sm text-center"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                >
+                  {error}
+                </motion.p>
+              )}
+            </AnimatePresence>
+          </motion.div>
         )}
-      </div>
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }
