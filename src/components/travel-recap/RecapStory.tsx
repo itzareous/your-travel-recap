@@ -253,7 +253,9 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
       return;
     }
 
-    const duration = currentSlide.type === 'quarter-intro' ? 7000 : 5000;
+    const duration = currentSlide.type === 'quarter-intro' ? 14000 : 
+                     currentSlide.type === 'intro' ? 10000 : 
+                     currentSlide.type === 'destination' ? 12000 : 10000;
     const interval = 50;
     const increment = (interval / duration) * 100;
 
@@ -455,6 +457,7 @@ function IntroSlide({ profile, totalDestinations, quarterlyData }: { profile: Tr
   const activeQuartersCount = (['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).filter(q => quarterlyData[q].length > 0).length;
   
   // Get all images for circular photo display
+  // Note: d.images is string[] (URLs), not TravelImage objects
   const allImages = useMemo(() => {
     return Object.values(quarterlyData).flat().flatMap(d => d.images);
   }, [quarterlyData]);
@@ -463,18 +466,16 @@ function IntroSlide({ profile, totalDestinations, quarterlyData }: { profile: Tr
   const openingIndex = profile.username.length % OPENING_LINES.length;
   const randomOpening = OPENING_LINES[openingIndex];
   
-  // Positions for scattered circular photos
+  // Positions for scattered circular photos (same size as stat circles)
   const photoPositions = [
-    { top: '0%', left: '5%', size: 'w-16 h-16' },
-    { top: '5%', left: '35%', size: 'w-14 h-14' },
-    { top: '0%', right: '10%', size: 'w-20 h-20' },
-    { top: '30%', left: '0%', size: 'w-18 h-18' },
-    { top: '25%', left: '30%', size: 'w-20 h-20' },
-    { top: '35%', right: '5%', size: 'w-16 h-16' },
-    { top: '60%', left: '8%', size: 'w-14 h-14' },
-    { top: '55%', left: '38%', size: 'w-22 h-22' },
-    { top: '65%', right: '12%', size: 'w-18 h-18' },
-    { top: '85%', left: '25%', size: 'w-16 h-16' }
+    { top: '10%', right: '15%' },
+    { top: '35%', left: '5%' },
+    { top: '45%', left: '45%' },
+    { top: '70%', left: '25%' },
+    { top: '15%', left: '50%' },
+    { top: '60%', right: '25%' },
+    { top: '80%', right: '15%' },
+    { top: '30%', right: '40%' }
   ];
   
   return (
@@ -556,88 +557,91 @@ function IntroSlide({ profile, totalDestinations, quarterlyData }: { profile: Tr
           @{profile.username}
         </motion.p>
         
-        {/* Stat circles */}
-        <motion.div 
-          className="flex gap-8 justify-center mb-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.5 }}
-        >
-          <motion.div 
-            className="flex flex-col items-center"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 1.6, type: "spring", stiffness: 200 }}
+        {/* Mixed stat circles and photo circles - YouTube Wrapped style */}
+        <div className="relative w-full max-w-md h-80 mx-auto mt-4">
+          {/* Stat circle 1 - Destinations */}
+          <motion.div
+            className="absolute w-24 h-24 rounded-full bg-gradient-to-br from-[#FF5B04] to-[#E54F03] flex flex-col items-center justify-center shadow-xl border-4 border-[#233038]"
+            style={{ top: '20%', left: '10%' }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 1.5, duration: 0.5, type: "spring" }}
           >
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#FF5B04] to-[#E54F03] flex items-center justify-center mb-2 shadow-lg shadow-[#FF5B04]/30">
-              <AnimatedCounter value={totalDestinations} className="text-white text-3xl font-bold" />
-            </div>
-            <span className="text-[#D3DBDD] text-sm">Destinations</span>
+            <AnimatedCounter value={totalDestinations} className="text-white text-2xl font-bold" />
+            <span className="text-white text-[10px] font-medium">Destinations</span>
           </motion.div>
           
-          <motion.div 
-            className="flex flex-col items-center"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 1.8, type: "spring", stiffness: 200 }}
+          {/* Stat circle 2 - Quarters Active */}
+          <motion.div
+            className="absolute w-24 h-24 rounded-full bg-gradient-to-br from-[#2563EB] to-[#1E40AF] flex flex-col items-center justify-center shadow-xl border-4 border-[#233038]"
+            style={{ top: '55%', right: '8%' }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 1.6, duration: 0.5, type: "spring" }}
           >
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#2563EB] to-[#1E40AF] flex items-center justify-center mb-2 shadow-lg shadow-[#2563EB]/30">
-              <AnimatedCounter value={activeQuartersCount} className="text-white text-3xl font-bold" />
-            </div>
-            <span className="text-[#D3DBDD] text-sm">Quarters Active</span>
+            <AnimatedCounter value={activeQuartersCount} className="text-white text-2xl font-bold" />
+            <span className="text-white text-[10px] font-medium">Quarters</span>
           </motion.div>
-        </motion.div>
-        
-        {/* Circular photo highlights - YouTube style */}
-        {allImages.length > 0 && (
-          <div className="relative w-full max-w-sm h-56 mx-auto">
-            {allImages.slice(0, Math.min(10, allImages.length)).map((img, idx) => {
-              const pos = photoPositions[idx % photoPositions.length];
-              
-              return (
-                <motion.div
-                  key={idx}
-                  className={`absolute ${pos.size} rounded-full overflow-hidden border-4 border-[#233038] shadow-xl`}
-                  style={{ 
-                    top: pos.top, 
-                    left: pos.left, 
-                    right: pos.right 
-                  }}
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 2.0 + (idx * 0.1), duration: 0.5, type: "spring" }}
-                >
-                  <img 
-                    src={img.preview} 
-                    alt={`Memory ${idx + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-        
-        {/* Placeholder when no images */}
-        {allImages.length === 0 && (
-          <motion.div 
-            className="relative w-full max-w-sm h-40 mx-auto flex items-center justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 2.0 }}
-          >
-            <div className="text-[#D3DBDD] text-center">
-              <motion.img 
-                src="/images/camera.webp" 
-                alt="Camera" 
-                className="w-16 h-16 mx-auto mb-2 opacity-50"
-                animate={{ y: [0, -5, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-              <p className="text-sm opacity-70">Your memories will appear here</p>
-            </div>
-          </motion.div>
-        )}
+          
+          {/* Photo circles scattered around - same size as stat circles */}
+          {allImages.slice(0, Math.min(8, allImages.length)).map((imageUrl, idx) => {
+            const pos = photoPositions[idx % photoPositions.length];
+            
+            return (
+              <motion.div
+                key={idx}
+                className="absolute w-20 h-20 rounded-full overflow-hidden border-4 border-[#233038] shadow-xl"
+                style={{ 
+                  top: pos.top, 
+                  left: pos.left, 
+                  right: pos.right 
+                }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 1.7 + (idx * 0.1), duration: 0.5, type: "spring" }}
+              >
+                <img 
+                  src={imageUrl} 
+                  alt={`Memory ${idx + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </motion.div>
+            );
+          })}
+          
+          {/* Placeholder circles when no images */}
+          {allImages.length === 0 && (
+            <>
+              <motion.div
+                className="absolute w-20 h-20 rounded-full bg-[#233038] border-4 border-[#075056] flex items-center justify-center"
+                style={{ top: '10%', right: '15%' }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 0.5 }}
+                transition={{ delay: 1.8 }}
+              >
+                <img src="/images/camera.webp" alt="Photo" className="w-8 h-8 opacity-40" />
+              </motion.div>
+              <motion.div
+                className="absolute w-20 h-20 rounded-full bg-[#233038] border-4 border-[#075056] flex items-center justify-center"
+                style={{ top: '45%', left: '45%' }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 0.5 }}
+                transition={{ delay: 1.9 }}
+              >
+                <img src="/images/camera.webp" alt="Photo" className="w-8 h-8 opacity-40" />
+              </motion.div>
+              <motion.div
+                className="absolute w-20 h-20 rounded-full bg-[#233038] border-4 border-[#075056] flex items-center justify-center"
+                style={{ top: '70%', left: '25%' }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 0.5 }}
+                transition={{ delay: 2.0 }}
+              >
+                <img src="/images/camera.webp" alt="Photo" className="w-8 h-8 opacity-40" />
+              </motion.div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
