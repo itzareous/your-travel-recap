@@ -253,7 +253,7 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
       return;
     }
 
-    const duration = currentSlide.type === 'quarter-intro' ? 4000 : 5000;
+    const duration = currentSlide.type === 'quarter-intro' ? 7000 : 5000;
     const interval = 50;
     const increment = (interval / duration) * 100;
 
@@ -452,143 +452,202 @@ const AnimatedTitle = ({ text, delay = 0 }: { text: string; delay?: number }) =>
 
 function IntroSlide({ profile, totalDestinations, quarterlyData }: { profile: TravelRecapData['profile']; totalDestinations: number; quarterlyData: QuarterlyData }) {
   // Count active quarters
-  const activeQuarters = (['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).filter(q => quarterlyData[q].length > 0);
-  const totalPhotos = Object.values(quarterlyData).flat().reduce((sum, d) => sum + d.images.length, 0);
+  const activeQuartersCount = (['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).filter(q => quarterlyData[q].length > 0).length;
+  
+  // Get all images for circular photo display
+  const allImages = useMemo(() => {
+    return Object.values(quarterlyData).flat().flatMap(d => d.images);
+  }, [quarterlyData]);
   
   // Use a consistent random opening (seeded by username)
   const openingIndex = profile.username.length % OPENING_LINES.length;
   const randomOpening = OPENING_LINES[openingIndex];
   
+  // Positions for scattered circular photos
+  const photoPositions = [
+    { top: '0%', left: '5%', size: 'w-16 h-16' },
+    { top: '5%', left: '35%', size: 'w-14 h-14' },
+    { top: '0%', right: '10%', size: 'w-20 h-20' },
+    { top: '30%', left: '0%', size: 'w-18 h-18' },
+    { top: '25%', left: '30%', size: 'w-20 h-20' },
+    { top: '35%', right: '5%', size: 'w-16 h-16' },
+    { top: '60%', left: '8%', size: 'w-14 h-14' },
+    { top: '55%', left: '38%', size: 'w-22 h-22' },
+    { top: '65%', right: '12%', size: 'w-18 h-18' },
+    { top: '85%', left: '25%', size: 'w-16 h-16' }
+  ];
+  
   return (
-    <div className="absolute inset-0 bg-[#0B0101] flex flex-col items-center justify-center p-8 text-center overflow-hidden">
-      {/* Decorative 3D airplane - flies in from off-screen */}
-      <motion.img 
-        src="/images/airplane.webp" 
-        alt="Airplane" 
-        className="w-32 h-32 mb-6 object-contain"
-        initial={{ x: -200, y: -100, rotate: -45, opacity: 0 }}
-        animate={{ x: 0, y: 0, rotate: 0, opacity: 1 }}
-        transition={{ 
-          type: "spring", 
-          stiffness: 100, 
-          damping: 15,
-          duration: 1 
-        }}
-      />
-      
-      {/* Fun opening line */}
-      <motion.p 
-        className="text-[#D3DBDD] text-xl mb-4 text-center whitespace-pre-line"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.6 }}
-      >
-        {randomOpening}
-      </motion.p>
-      
-      {/* Main title - word by word */}
-      <h1 className="text-5xl font-bold text-[#FDF6E3] mb-2 overflow-hidden">
-        <AnimatedTitle text="Your 2025 Stamped Recap" delay={0.8} />
-      </h1>
-      
-      {/* Username with flair */}
-      <motion.p 
-        className="text-[#FF5B04] text-2xl mb-8 font-medium"
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 1.6, type: "spring", stiffness: 200 }}
-      >
-        @{profile.username}
-      </motion.p>
-      
-      {/* Stats cards */}
-      <motion.div 
-        className="grid grid-cols-2 gap-4 w-full max-w-md mb-6"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-      >
+    <div className="absolute inset-0 bg-[#0B0101] overflow-hidden">
+      {/* Animated gradient blobs background */}
+      <div className="absolute inset-0">
         <motion.div 
-          className="bg-[#233038] rounded-xl p-6 text-center border border-[#075056] hover:border-[#FF5B04] transition-colors"
-          variants={flip3D}
-          transition={{ delay: 1.8 }}
-          whileHover={{ scale: 1.05 }}
+          className="absolute w-96 h-96 bg-gradient-to-br from-[#FF5B04]/20 to-[#2563EB]/20 rounded-full blur-3xl top-0 -left-20"
+          animate={{ 
+            scale: [1, 1.2, 1],
+            x: [0, 30, 0],
+            y: [0, 20, 0]
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div 
+          className="absolute w-96 h-96 bg-gradient-to-br from-[#2563EB]/20 to-[#075056]/20 rounded-full blur-3xl top-0 -right-20"
+          animate={{ 
+            scale: [1.2, 1, 1.2],
+            x: [0, -20, 0],
+            y: [0, 30, 0]
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+        />
+        <motion.div 
+          className="absolute w-96 h-96 bg-gradient-to-br from-[#075056]/20 to-[#FF5B04]/20 rounded-full blur-3xl bottom-0 left-1/2 -translate-x-1/2"
+          animate={{ 
+            scale: [1, 1.3, 1],
+            y: [0, -20, 0]
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 4 }}
+        />
+      </div>
+      
+      {/* Content */}
+      <div className="relative z-10 h-full flex flex-col items-center justify-center p-6 text-center">
+        {/* Decorative 3D airplane - flies in from off-screen */}
+        <motion.img 
+          src="/images/airplane.webp" 
+          alt="Airplane" 
+          className="w-24 h-24 mb-4 object-contain"
+          initial={{ x: -200, y: -100, rotate: -45, opacity: 0 }}
+          animate={{ x: 0, y: 0, rotate: 0, opacity: 1 }}
+          transition={{ 
+            type: "spring", 
+            stiffness: 100, 
+            damping: 15,
+            duration: 1 
+          }}
+        />
+        
+        {/* Fun opening line */}
+        <motion.p 
+          className="text-[#D3DBDD] text-lg mb-3 text-center whitespace-pre-line"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.6 }}
         >
-          <motion.img 
-            src="/images/trophy.webp" 
-            alt="Trophy" 
-            className="w-12 h-12 mb-2 mx-auto object-contain"
+          {randomOpening}
+        </motion.p>
+        
+        {/* Main title - 2 lines */}
+        <motion.h1 
+          className="text-4xl font-bold text-[#FDF6E3] mb-1 leading-tight"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, duration: 0.6 }}
+        >
+          Your 2025<br />Stamped Recap
+        </motion.h1>
+        
+        {/* Username with flair */}
+        <motion.p 
+          className="text-[#FF5B04] text-xl mb-6 font-medium"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 1.2, type: "spring", stiffness: 200 }}
+        >
+          @{profile.username}
+        </motion.p>
+        
+        {/* Stat circles */}
+        <motion.div 
+          className="flex gap-8 justify-center mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5 }}
+        >
+          <motion.div 
+            className="flex flex-col items-center"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ delay: 2, type: "spring" }}
-          />
-          <AnimatedCounter value={totalDestinations} className="text-[#FF5B04] text-3xl font-bold" />
-          <div className="text-[#D3DBDD] text-sm">Destinations</div>
+            transition={{ delay: 1.6, type: "spring", stiffness: 200 }}
+          >
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#FF5B04] to-[#E54F03] flex items-center justify-center mb-2 shadow-lg shadow-[#FF5B04]/30">
+              <AnimatedCounter value={totalDestinations} className="text-white text-3xl font-bold" />
+            </div>
+            <span className="text-[#D3DBDD] text-sm">Destinations</span>
+          </motion.div>
+          
+          <motion.div 
+            className="flex flex-col items-center"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 1.8, type: "spring", stiffness: 200 }}
+          >
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#2563EB] to-[#1E40AF] flex items-center justify-center mb-2 shadow-lg shadow-[#2563EB]/30">
+              <AnimatedCounter value={activeQuartersCount} className="text-white text-3xl font-bold" />
+            </div>
+            <span className="text-[#D3DBDD] text-sm">Quarters Active</span>
+          </motion.div>
         </motion.div>
         
-        <motion.div 
-          className="bg-[#233038] rounded-xl p-6 text-center border border-[#075056] hover:border-[#2563EB] transition-colors"
-          variants={flip3D}
-          transition={{ delay: 2 }}
-          whileHover={{ scale: 1.05 }}
-        >
-          <motion.img 
-            src="/images/calendar.webp" 
-            alt="Calendar" 
-            className="w-12 h-12 mb-2 mx-auto object-contain"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 2.2, type: "spring" }}
-          />
-          <AnimatedCounter value={activeQuarters.length} className="text-[#2563EB] text-3xl font-bold" />
-          <div className="text-[#D3DBDD] text-sm">Quarters Active</div>
-        </motion.div>
-      </motion.div>
-      
-      {/* Quarter preview with enhanced styling */}
-      <motion.div 
-        className="flex justify-center gap-3 mb-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 2.4 }}
-      >
-        {(['Q1', 'Q2', 'Q3', 'Q4'] as QuarterKey[]).map((q, i) => (
+        {/* Circular photo highlights - YouTube style */}
+        {allImages.length > 0 && (
+          <div className="relative w-full max-w-sm h-56 mx-auto">
+            {allImages.slice(0, Math.min(10, allImages.length)).map((img, idx) => {
+              const pos = photoPositions[idx % photoPositions.length];
+              
+              return (
+                <motion.div
+                  key={idx}
+                  className={`absolute ${pos.size} rounded-full overflow-hidden border-4 border-[#233038] shadow-xl`}
+                  style={{ 
+                    top: pos.top, 
+                    left: pos.left, 
+                    right: pos.right 
+                  }}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 2.0 + (idx * 0.1), duration: 0.5, type: "spring" }}
+                >
+                  <img 
+                    src={img.preview} 
+                    alt={`Memory ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+        
+        {/* Placeholder when no images */}
+        {allImages.length === 0 && (
           <motion.div 
-            key={q}
-            className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
-              quarterlyData[q].length > 0 
-                ? 'bg-[#FF5B04] text-white shadow-lg shadow-[#FF5B04]/30' 
-                : 'bg-[#233038] text-[#D3DBDD] opacity-50'
-            }`}
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 2.5 + i * 0.1, type: "spring" }}
-            whileHover={{ scale: 1.1 }}
+            className="relative w-full max-w-sm h-40 mx-auto flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 2.0 }}
           >
-            {q} {quarterlyData[q].length > 0 && `(${quarterlyData[q].length})`}
+            <div className="text-[#D3DBDD] text-center">
+              <motion.img 
+                src="/images/camera.webp" 
+                alt="Camera" 
+                className="w-16 h-16 mx-auto mb-2 opacity-50"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+              <p className="text-sm opacity-70">Your memories will appear here</p>
+            </div>
           </motion.div>
-        ))}
-      </motion.div>
-      
-      {/* Fun fact */}
-      <motion.p 
-        className="text-[#F4D47C] text-sm mt-2 text-center italic"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 2.9 }}
-      >
-        {totalDestinations > 0 
-          ? <span className="flex items-center justify-center gap-1">That's {totalDestinations} stamps in your passport! <img src="/images/stamp.webp" alt="Stamp" className="w-5 h-5 inline object-contain" /> {totalPhotos > 0 && <span>• {totalPhotos} memories captured <img src="/images/camera.webp" alt="Camera" className="w-5 h-5 inline object-contain" /></span>}</span>
-          : <span className="flex items-center justify-center gap-1">Ready to add some stamps? <img src="/images/stamp.webp" alt="Stamp" className="w-5 h-5 inline object-contain" /></span>
-        }
-      </motion.p>
+        )}
+      </div>
     </div>
   );
 }
 
 function QuarterIntroSlide({ quarter, quarterName, count, destinations }: { quarter: QuarterKey; quarterName: string; count: number; destinations: TravelDestination[] }) {
   const info = QUARTER_CONTEXT[quarter];
-  const randomFact = getRandomItem(info.funFacts);
+  
+  // Memoize the random fact so it doesn't change on re-renders
+  const randomFact = useMemo(() => getRandomItem(info.funFacts), [quarter]);
   
   // Calculate total photos for this quarter
   const photoCount = destinations.reduce((sum, dest) => sum + dest.images.length, 0);
@@ -602,7 +661,7 @@ function QuarterIntroSlide({ quarter, quarterName, count, destinations }: { quar
         className="w-32 h-32 mb-4 object-contain mx-auto"
         initial={{ scale: 0, rotate: -180 }}
         animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: "spring", stiffness: 200, damping: 15, duration: 0.8 }}
+        transition={{ type: "spring", stiffness: 150, damping: 12, duration: 1.2 }}
       />
       
       {/* Quarter badge - slide in from top */}
@@ -610,7 +669,7 @@ function QuarterIntroSlide({ quarter, quarterName, count, destinations }: { quar
         className="bg-[#FF5B04] text-white px-6 py-2 rounded-full font-bold mb-4 shadow-lg shadow-[#FF5B04]/30"
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3, type: "spring" }}
+        transition={{ delay: 0.5, type: "spring", duration: 0.6 }}
       >
         {quarter}
       </motion.div>
@@ -620,7 +679,7 @@ function QuarterIntroSlide({ quarter, quarterName, count, destinations }: { quar
         className="text-[#D3DBDD] text-lg mb-2"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
+        transition={{ delay: 0.8, duration: 0.5 }}
       >
         {info.subtitle}
       </motion.p>
@@ -630,7 +689,7 @@ function QuarterIntroSlide({ quarter, quarterName, count, destinations }: { quar
         className="text-4xl font-bold text-[#FDF6E3] mb-3 text-center"
         initial={{ opacity: 0, letterSpacing: "0.5em" }}
         animate={{ opacity: 1, letterSpacing: "0em" }}
-        transition={{ delay: 0.6, duration: 0.8 }}
+        transition={{ delay: 1.0, duration: 1.2 }}
       >
         {quarterName}
       </motion.h2>
@@ -640,7 +699,7 @@ function QuarterIntroSlide({ quarter, quarterName, count, destinations }: { quar
         className="text-[#F4D47C] text-xl mb-8 text-center font-medium"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1 }}
+        transition={{ delay: 1.8, duration: 0.6 }}
       >
         {randomFact}
       </motion.p>
@@ -650,13 +709,13 @@ function QuarterIntroSlide({ quarter, quarterName, count, destinations }: { quar
         className="flex gap-8 mb-8"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.2 }}
+        transition={{ delay: 2.2 }}
       >
         <motion.div 
           className="text-center"
           initial={{ x: -50, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          transition={{ delay: 1.3, type: "spring" }}
+          transition={{ delay: 2.4, type: "spring", duration: 0.6 }}
         >
           <AnimatedCounter value={count} className="text-[#FF5B04] text-5xl font-bold" />
           <div className="text-[#D3DBDD] text-sm">
@@ -669,7 +728,7 @@ function QuarterIntroSlide({ quarter, quarterName, count, destinations }: { quar
             className="text-center"
             initial={{ x: 50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 1.4, type: "spring" }}
+            transition={{ delay: 2.6, type: "spring", duration: 0.6 }}
           >
             <AnimatedCounter value={photoCount} className="text-[#2563EB] text-5xl font-bold" />
             <div className="text-[#D3DBDD] text-sm">
@@ -691,7 +750,7 @@ function QuarterIntroSlide({ quarter, quarterName, count, destinations }: { quar
             key={dest.id}
             className="bg-[#075056] border-2 border-[#F4D47C] px-4 py-2 rounded-full text-[#FDF6E3] flex items-center gap-2"
             variants={popIn}
-            transition={{ delay: 1.6 + idx * 0.08 }}
+            transition={{ delay: 3.0 + idx * 0.12 }}
             whileHover={{ scale: 1.1 }}
           >
             <img src="/images/stamp.webp" alt="Pin" className="w-4 h-4 object-contain" />

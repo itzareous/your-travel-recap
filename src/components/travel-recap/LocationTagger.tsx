@@ -269,27 +269,27 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
           </p>
         </motion.div>
         
-        {/* Next button - right */}
-        <motion.button
-          onClick={hasSuggestion && showSuggestion ? confirmSuggestion : saveLocation}
-          disabled={
-            (!hasSuggestion && !showSuggestion && locationType === 'country' && !selectedCountry) ||
-            (!hasSuggestion && !showSuggestion && locationType === 'city' && (!cityName.trim() || !selectedCountry))
-          }
-          className="text-[#FF5B04] hover:text-[#E54F03] disabled:text-[#233038] disabled:cursor-not-allowed font-semibold flex items-center gap-1 transition-colors"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          {isLastImage ? 'Done' : 'Next'}
-          <ArrowRight className="w-5 h-5" />
-        </motion.button>
+        {/* Next button - right (only show when suggestion mode) */}
+        {hasSuggestion && showSuggestion ? (
+          <motion.button
+            onClick={confirmSuggestion}
+            className="text-[#FF5B04] hover:text-[#E54F03] font-semibold flex items-center gap-1 transition-colors"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {isLastImage ? 'Done' : 'Next'}
+            <ArrowRight className="w-5 h-5" />
+          </motion.button>
+        ) : (
+          <div className="w-16" />
+        )}
       </motion.div>
 
       {/* Main Content - with padding for fixed header and footer */}
-      <div className="pt-20 pb-36 flex-1 overflow-y-auto">
+      <div className="pt-20 pb-48 flex-1 overflow-y-auto flex flex-col">
         {/* Progress dots */}
         <motion.div 
-          className="flex justify-center gap-1 py-4 px-4 flex-wrap"
+          className="flex justify-center gap-1 py-3 px-4 flex-wrap"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.4 }}
@@ -311,15 +311,15 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
           ))}
         </motion.div>
 
-        {/* Image container - takes most of the space */}
-        <div className="relative px-4">
-          <div className="relative max-w-2xl mx-auto">
+        {/* Image container - takes most of the space with even padding */}
+        <div className="relative px-6 py-4 flex-1 flex items-center justify-center">
+          <div className="relative max-w-2xl mx-auto w-full h-full">
             <AnimatePresence mode="wait">
               <motion.img 
                 key={currentImage.id}
                 src={currentImage.preview} 
                 alt="Travel memory"
-                className="w-full h-[55vh] md:h-[50vh] object-contain rounded-2xl border-4 border-[#233038]"
+                className="w-full h-full max-h-[65vh] object-contain rounded-2xl border-4 border-[#233038]"
                 initial={{ opacity: 0, scale: 1.05 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
@@ -364,7 +364,7 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
 
       {/* Fixed Footer with Action Buttons */}
       <motion.div 
-        className="fixed bottom-0 left-0 right-0 bg-[#233038] border-t border-[#075056] p-4 z-10"
+        className="fixed bottom-0 left-0 right-0 bg-[#233038] border-t border-[#075056] p-6 z-10"
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
@@ -457,23 +457,23 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
               </motion.button>
             </motion.div>
             
-            {/* Input fields */}
+            {/* Input fields - stacked vertically with equal widths */}
             {locationType === 'city' ? (
-              <div className="flex gap-2">
+              <div className="space-y-3">
                 <Input
                   type="text"
                   placeholder="City name"
                   value={cityName}
                   onChange={(e) => setCityName(e.target.value)}
-                  className="flex-1 bg-[#0B0101] border border-[#075056] text-[#FDF6E3] px-4 py-3 rounded-lg focus:border-[#FF5B04] focus:outline-none placeholder:text-[#D3DBDD]"
+                  className="w-full bg-[#0B0101] border border-[#075056] text-[#FDF6E3] px-4 py-3 rounded-lg focus:border-[#FF5B04] focus:outline-none placeholder:text-[#D3DBDD]"
                 />
-                <div className="relative flex-1">
+                <div className="relative w-full">
                   <button
                     onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                    className="w-full h-full px-4 py-3 rounded-lg border border-[#075056] bg-[#0B0101] flex items-center justify-between text-left hover:border-[#FF5B04] transition-colors"
+                    className="w-full px-4 py-3 rounded-lg border border-[#075056] bg-[#0B0101] flex items-center justify-between text-left hover:border-[#FF5B04] transition-colors"
                   >
                     <span className={`truncate ${selectedCountry ? 'text-[#FDF6E3]' : 'text-[#D3DBDD]'}`}>
-                      {selectedCountry || 'Country'}
+                      {selectedCountry || 'Select country'}
                     </span>
                     <ChevronDown className={`w-4 h-4 text-[#D3DBDD] transition-transform flex-shrink-0 ${showCountryDropdown ? 'rotate-180' : ''}`} />
                   </button>
@@ -518,7 +518,7 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
                 </div>
               </div>
             ) : (
-              <div className="relative">
+              <div className="relative w-full">
                 <button
                   onClick={() => setShowCountryDropdown(!showCountryDropdown)}
                   className="w-full px-4 py-3 rounded-lg border border-[#075056] bg-[#0B0101] flex items-center justify-between text-left hover:border-[#FF5B04] transition-colors"
@@ -582,6 +582,21 @@ export default function LocationTagger({ images, onComplete, onBack }: LocationT
                 </motion.p>
               )}
             </AnimatePresence>
+            
+            {/* Confirm button in footer for manual input */}
+            <motion.button
+              onClick={saveLocation}
+              disabled={
+                (locationType === 'country' && !selectedCountry) ||
+                (locationType === 'city' && (!cityName.trim() || !selectedCountry))
+              }
+              className="w-full bg-[#2563EB] hover:bg-[#1E40AF] disabled:bg-[#0B0101] disabled:text-[#D3DBDD] disabled:border disabled:border-[#233038] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Check className="w-5 h-5" />
+              Confirm Location
+            </motion.button>
           </motion.div>
         )}
         </AnimatePresence>

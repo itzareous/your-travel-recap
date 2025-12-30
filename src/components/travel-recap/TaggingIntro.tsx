@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { MapPin, ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { bounceDown, fadeInUp } from "@/utils/animations";
 
 interface TaggingIntroProps {
@@ -30,10 +29,24 @@ const AnimatedWord = ({ word, index }: { word: string; index: number }) => (
 export default function TaggingIntro({ imageCount, geoTaggedCount, onContinue, onBack }: TaggingIntroProps) {
   const [progressWidth, setProgressWidth] = useState(50);
 
+  // Memoize onContinue to avoid issues with useEffect dependency
+  const handleContinue = useCallback(() => {
+    onContinue();
+  }, [onContinue]);
+
   useEffect(() => {
     const timer = setTimeout(() => setProgressWidth(75), 300);
     return () => clearTimeout(timer);
   }, []);
+
+  // Auto-advance after animations complete + 1 second delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleContinue();
+    }, 2000); // 2 seconds total (animations finish ~0.8s, then 1.2s delay)
+    
+    return () => clearTimeout(timer);
+  }, [handleContinue]);
 
   const headingWords = "Let's Tag Your Locations".split(" ");
 
@@ -117,29 +130,7 @@ export default function TaggingIntro({ imageCount, geoTaggedCount, onContinue, o
             )}
           </motion.p>
           
-          {/* CTA - scale + glow pulse */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ 
-              opacity: 1, 
-              scale: 1,
-              boxShadow: ["0 0 0px rgba(255, 91, 4, 0)", "0 0 30px rgba(255, 91, 4, 0.4)", "0 0 0px rgba(255, 91, 4, 0)"]
-            }}
-            transition={{ 
-              opacity: { delay: 1.4, duration: 0.5 },
-              scale: { delay: 1.4, duration: 0.5, type: "spring" },
-              boxShadow: { delay: 1.6, duration: 1.5, repeat: Infinity, ease: "easeInOut" }
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Button
-              onClick={onContinue}
-              className="bg-[#FF5B04] hover:bg-[#E54F03] text-white font-semibold px-12 py-6 rounded-full transition-all text-lg"
-            >
-              Let's Go! →
-            </Button>
-          </motion.div>
+
         </div>
       </div>
     </div>
