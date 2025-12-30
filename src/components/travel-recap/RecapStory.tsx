@@ -384,17 +384,7 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
         )}
       </div>
 
-      {/* Navigation hints */}
-      <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-8 text-[#D3DBDD] text-sm">
-        <div className="flex items-center gap-1">
-          <ChevronLeft className="w-4 h-4" />
-          <span>Prev</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <span>Next</span>
-          <ChevronRight className="w-4 h-4" />
-        </div>
-      </div>
+
     </div>
   );
 }
@@ -557,40 +547,61 @@ function IntroSlide({ profile, totalDestinations, quarterlyData }: { profile: Tr
           @{profile.username}
         </motion.p>
         
-        {/* Stat circles row */}
-        <motion.div 
-          className="flex gap-8 justify-center mb-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.5 }}
-        >
-          {/* Stat circle 1 - Destinations */}
-          <motion.div
-            className="w-20 h-20 rounded-full bg-gradient-to-br from-[#FF5B04] to-[#E54F03] flex flex-col items-center justify-center shadow-xl border-4 border-[#233038]"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 1.6, duration: 0.5, type: "spring" }}
-          >
-            <AnimatedCounter value={totalDestinations} className="text-white text-2xl font-bold" />
-            <span className="text-white text-[10px] font-medium">Destinations</span>
-          </motion.div>
-          
-          {/* Stat circle 2 - Quarters Active */}
-          <motion.div
-            className="w-20 h-20 rounded-full bg-gradient-to-br from-[#2563EB] to-[#1E40AF] flex flex-col items-center justify-center shadow-xl border-4 border-[#233038]"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 1.7, duration: 0.5, type: "spring" }}
-          >
-            <AnimatedCounter value={activeQuartersCount} className="text-white text-2xl font-bold" />
-            <span className="text-white text-[10px] font-medium">Quarters</span>
-          </motion.div>
-        </motion.div>
-
-        {/* Photo grid container - CSS Grid with equal-sized invisible cells */}
+        {/* Photo grid with integrated stat circles */}
         <div className="relative w-full max-w-lg mx-auto mt-4">
           <div className="grid grid-cols-4 gap-2 px-4">
-            {allImages.slice(0, 12).map((imageUrl, idx) => {
+            {Array.from({ length: 12 }).map((_, gridIdx) => {
+              // Position 4 = Destinations stat (row 2, col 1)
+              if (gridIdx === 4) {
+                return (
+                  <motion.div
+                    key="destinations"
+                    className="w-20 h-20 flex items-center justify-center"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 1.5, duration: 0.5, type: "spring" }}
+                  >
+                    <div 
+                      className="rounded-full bg-gradient-to-br from-[#FF5B04] to-[#E54F03] flex flex-col items-center justify-center shadow-xl border-4 border-[#233038]"
+                      style={{ width: '80px', height: '80px', minWidth: '80px', minHeight: '80px' }}
+                    >
+                      <AnimatedCounter value={totalDestinations} className="text-white text-2xl font-bold" />
+                      <span className="text-white text-[10px] font-medium">Destinations</span>
+                    </div>
+                  </motion.div>
+                );
+              }
+              
+              // Position 5 = Quarters stat (row 2, col 2)
+              if (gridIdx === 5) {
+                return (
+                  <motion.div
+                    key="quarters"
+                    className="w-20 h-20 flex items-center justify-center"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 1.6, duration: 0.5, type: "spring" }}
+                  >
+                    <div 
+                      className="rounded-full bg-gradient-to-br from-[#2563EB] to-[#1E40AF] flex flex-col items-center justify-center shadow-xl border-4 border-[#233038]"
+                      style={{ width: '80px', height: '80px', minWidth: '80px', minHeight: '80px' }}
+                    >
+                      <AnimatedCounter value={activeQuartersCount} className="text-white text-2xl font-bold" />
+                      <span className="text-white text-[10px] font-medium">Quarters</span>
+                    </div>
+                  </motion.div>
+                );
+              }
+              
+              // Photo circles for remaining positions
+              // Adjust photo index: positions 0-3 map to photos 0-3, positions 6-11 map to photos 4-9
+              const photoIdx = gridIdx < 4 ? gridIdx : gridIdx - 2;
+              const imageUrl = allImages[photoIdx];
+              
+              if (!imageUrl) {
+                return <div key={gridIdx} className="w-20 h-20" />;
+              }
+              
               // Size variants as pixel values for explicit sizing
               const sizeMap: Record<string, number> = {
                 'small': 56,
@@ -599,24 +610,23 @@ function IntroSlide({ profile, totalDestinations, quarterlyData }: { profile: Tr
               };
               
               const sizeVariants = ['medium', 'large', 'small', 'medium', 'large', 'small'];
-              const sizeKey = sizeVariants[idx % sizeVariants.length];
+              const sizeKey = sizeVariants[photoIdx % sizeVariants.length];
               const pixelSize = sizeMap[sizeKey];
               
               return (
                 <motion.div
-                  key={idx}
-                  className="w-20 h-20 flex items-center justify-center" // Container cell (invisible)
+                  key={gridIdx}
+                  className="w-20 h-20 flex items-center justify-center"
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ 
-                    delay: 1.8 + (idx * 0.05), 
+                    delay: 1.7 + (photoIdx * 0.05), 
                     duration: 0.5,
                     type: "spring",
                     stiffness: 100,
                     damping: 15
                   }}
                 >
-                  {/* Actual circle - explicit pixel sizing to prevent stretching */}
                   <div 
                     className="rounded-full overflow-hidden border-4 border-[#233038] shadow-xl"
                     style={{ 
@@ -630,7 +640,7 @@ function IntroSlide({ profile, totalDestinations, quarterlyData }: { profile: Tr
                   >
                     <img 
                       src={imageUrl}
-                      alt={`Memory ${idx + 1}`}
+                      alt={`Memory ${photoIdx + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </div>
