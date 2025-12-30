@@ -557,15 +557,19 @@ function IntroSlide({ profile, totalDestinations, quarterlyData }: { profile: Tr
           @{profile.username}
         </motion.p>
         
-        {/* Mixed stat circles and photo circles - YouTube Wrapped style */}
-        <div className="relative w-full max-w-md h-80 mx-auto mt-4">
+        {/* Stat circles row */}
+        <motion.div 
+          className="flex gap-8 justify-center mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5 }}
+        >
           {/* Stat circle 1 - Destinations */}
           <motion.div
-            className="absolute w-24 h-24 rounded-full bg-gradient-to-br from-[#FF5B04] to-[#E54F03] flex flex-col items-center justify-center shadow-xl border-4 border-[#233038]"
-            style={{ top: '20%', left: '10%' }}
+            className="w-20 h-20 rounded-full bg-gradient-to-br from-[#FF5B04] to-[#E54F03] flex flex-col items-center justify-center shadow-xl border-4 border-[#233038]"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 1.5, duration: 0.5, type: "spring" }}
+            transition={{ delay: 1.6, duration: 0.5, type: "spring" }}
           >
             <AnimatedCounter value={totalDestinations} className="text-white text-2xl font-bold" />
             <span className="text-white text-[10px] font-medium">Destinations</span>
@@ -573,75 +577,89 @@ function IntroSlide({ profile, totalDestinations, quarterlyData }: { profile: Tr
           
           {/* Stat circle 2 - Quarters Active */}
           <motion.div
-            className="absolute w-24 h-24 rounded-full bg-gradient-to-br from-[#2563EB] to-[#1E40AF] flex flex-col items-center justify-center shadow-xl border-4 border-[#233038]"
-            style={{ top: '55%', right: '8%' }}
+            className="w-20 h-20 rounded-full bg-gradient-to-br from-[#2563EB] to-[#1E40AF] flex flex-col items-center justify-center shadow-xl border-4 border-[#233038]"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 1.6, duration: 0.5, type: "spring" }}
+            transition={{ delay: 1.7, duration: 0.5, type: "spring" }}
           >
             <AnimatedCounter value={activeQuartersCount} className="text-white text-2xl font-bold" />
             <span className="text-white text-[10px] font-medium">Quarters</span>
           </motion.div>
-          
-          {/* Photo circles scattered around - same size as stat circles */}
-          {allImages.slice(0, Math.min(8, allImages.length)).map((imageUrl, idx) => {
-            const pos = photoPositions[idx % photoPositions.length];
-            
-            return (
-              <motion.div
-                key={idx}
-                className="absolute w-20 h-20 rounded-full overflow-hidden border-4 border-[#233038] shadow-xl"
-                style={{ 
-                  top: pos.top, 
-                  left: pos.left, 
-                  right: pos.right 
-                }}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 1.7 + (idx * 0.1), duration: 0.5, type: "spring" }}
-              >
-                <img 
-                  src={imageUrl} 
-                  alt={`Memory ${idx + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </motion.div>
-            );
-          })}
+        </motion.div>
+
+        {/* Photo grid container - CSS Grid with equal-sized invisible cells */}
+        <div className="relative w-full max-w-lg mx-auto mt-4">
+          <div className="grid grid-cols-4 gap-2 px-4">
+            {allImages.slice(0, 12).map((imageUrl, idx) => {
+              // Size variants as pixel values for explicit sizing
+              const sizeMap: Record<string, number> = {
+                'small': 56,
+                'medium': 64,
+                'large': 72
+              };
+              
+              const sizeVariants = ['medium', 'large', 'small', 'medium', 'large', 'small'];
+              const sizeKey = sizeVariants[idx % sizeVariants.length];
+              const pixelSize = sizeMap[sizeKey];
+              
+              return (
+                <motion.div
+                  key={idx}
+                  className="w-20 h-20 flex items-center justify-center" // Container cell (invisible)
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ 
+                    delay: 1.8 + (idx * 0.05), 
+                    duration: 0.5,
+                    type: "spring",
+                    stiffness: 100,
+                    damping: 15
+                  }}
+                >
+                  {/* Actual circle - explicit pixel sizing to prevent stretching */}
+                  <div 
+                    className="rounded-full overflow-hidden border-4 border-[#233038] shadow-xl"
+                    style={{ 
+                      width: `${pixelSize}px`, 
+                      height: `${pixelSize}px`,
+                      minWidth: `${pixelSize}px`,
+                      minHeight: `${pixelSize}px`,
+                      maxWidth: `${pixelSize}px`,
+                      maxHeight: `${pixelSize}px`
+                    }}
+                  >
+                    <img 
+                      src={imageUrl}
+                      alt={`Memory ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
           
           {/* Placeholder circles when no images */}
           {allImages.length === 0 && (
-            <>
-              <motion.div
-                className="absolute w-20 h-20 rounded-full bg-[#233038] border-4 border-[#075056] flex items-center justify-center"
-                style={{ top: '10%', right: '15%' }}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 0.5 }}
-                transition={{ delay: 1.8 }}
-              >
-                <img src="/images/camera.webp" alt="Photo" className="w-8 h-8 opacity-40" />
-              </motion.div>
-              <motion.div
-                className="absolute w-20 h-20 rounded-full bg-[#233038] border-4 border-[#075056] flex items-center justify-center"
-                style={{ top: '45%', left: '45%' }}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 0.5 }}
-                transition={{ delay: 1.9 }}
-              >
-                <img src="/images/camera.webp" alt="Photo" className="w-8 h-8 opacity-40" />
-              </motion.div>
-              <motion.div
-                className="absolute w-20 h-20 rounded-full bg-[#233038] border-4 border-[#075056] flex items-center justify-center"
-                style={{ top: '70%', left: '25%' }}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 0.5 }}
-                transition={{ delay: 2.0 }}
-              >
-                <img src="/images/camera.webp" alt="Photo" className="w-8 h-8 opacity-40" />
-              </motion.div>
-            </>
+            <div className="grid grid-cols-3 gap-4 px-6">
+              {[0, 1, 2, 3, 4, 5].map((idx) => (
+                <motion.div
+                  key={idx}
+                  className="w-20 h-20 flex items-center justify-center"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 0.5 }}
+                  transition={{ delay: 1.8 + (idx * 0.1) }}
+                >
+                  <div className="w-16 h-16 rounded-full bg-[#233038] border-4 border-[#075056] flex items-center justify-center flex-shrink-0">
+                    <img src="/images/camera.webp" alt="Photo" className="w-8 h-8 opacity-40" />
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           )}
         </div>
+        
+
       </div>
     </div>
   );
