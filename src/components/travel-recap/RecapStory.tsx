@@ -253,9 +253,20 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
       return;
     }
 
-    const duration = currentSlide.type === 'quarter-intro' ? 14000 : 
-                     currentSlide.type === 'intro' ? 10000 : 
-                     currentSlide.type === 'destination' ? 12000 : 10000;
+    // Calculate dynamic duration - for destinations, base on image count
+    const getSlideDuration = () => {
+      if (currentSlide.type === 'destination') {
+        const imageCount = currentSlide.destination.images.length;
+        // Base 8 seconds + 4 seconds per additional image
+        // 1 image = 8s, 2 images = 12s, 3 images = 16s, 5 images = 24s
+        return 8000 + (imageCount - 1) * 4000;
+      }
+      if (currentSlide.type === 'quarter-intro') return 14000;
+      if (currentSlide.type === 'intro') return 10000;
+      if (currentSlide.type === 'stamp-collection') return 16000;
+      return 10000;
+    };
+    const duration = getSlideDuration();
     const interval = 50;
     const increment = (interval / duration) * 100;
 
@@ -684,120 +695,164 @@ function QuarterIntroSlide({ quarter, quarterName, count, destinations }: { quar
   // Calculate total photos for this quarter
   const photoCount = destinations.reduce((sum, dest) => sum + dest.images.length, 0);
   
+  // Count-up animation states
+  const [placesCount, setPlacesCount] = useState(0);
+  const [memoriesCount, setMemoriesCount] = useState(0);
+  
+  useEffect(() => {
+    // Delay start to sync with animation
+    const startDelay = setTimeout(() => {
+      // Count up animation for Places
+      let placesValue = 0;
+      const placesInterval = setInterval(() => {
+        placesValue += 1;
+        if (placesValue >= count) {
+          setPlacesCount(count);
+          clearInterval(placesInterval);
+        } else {
+          setPlacesCount(placesValue);
+        }
+      }, 150);
+      
+      // Count up animation for Memories
+      let memoriesValue = 0;
+      const memoriesInterval = setInterval(() => {
+        memoriesValue += 1;
+        if (memoriesValue >= photoCount) {
+          setMemoriesCount(photoCount);
+          clearInterval(memoriesInterval);
+        } else {
+          setMemoriesCount(memoriesValue);
+        }
+      }, 80);
+      
+      return () => {
+        clearInterval(placesInterval);
+        clearInterval(memoriesInterval);
+      };
+    }, 2000);
+    
+    return () => clearTimeout(startDelay);
+  }, [count, photoCount]);
+  
   return (
-    <div className="absolute inset-0 bg-gradient-to-br from-[#0B0101] to-[#233038] flex flex-col items-center justify-center p-8 text-[#FDF6E3] overflow-hidden">
-      {/* Large 3D seasonal image - rotate + scale in */}
-      <motion.img 
-        src={info.emoji} 
-        alt={quarter} 
-        className="w-32 h-32 mb-4 object-contain mx-auto"
-        initial={{ scale: 0, rotate: -180 }}
-        animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: "spring", stiffness: 150, damping: 12, duration: 1.2 }}
-      />
+    <div className="absolute inset-0 bg-[#0B0101] overflow-hidden">
+      {/* Single glow at bottom-right */}
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-[#FF5B04]/30 via-[#2563EB]/20 to-transparent rounded-full blur-3xl" />
       
-      {/* Quarter badge - slide in from top */}
-      <motion.div 
-        className="bg-[#FF5B04] text-white px-6 py-2 rounded-full font-bold mb-4 shadow-lg shadow-[#FF5B04]/30"
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.5, type: "spring", duration: 0.6 }}
-      >
-        {quarter}
-      </motion.div>
-      
-      {/* Subtitle */}
-      <motion.p 
-        className="text-[#D3DBDD] text-lg mb-2"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8, duration: 0.5 }}
-      >
-        {info.subtitle}
-      </motion.p>
-      
-      {/* Title - character reveal effect */}
-      <motion.h2 
-        className="text-4xl font-bold text-[#FDF6E3] mb-3 text-center"
-        initial={{ opacity: 0, letterSpacing: "0.5em" }}
-        animate={{ opacity: 1, letterSpacing: "0em" }}
-        transition={{ delay: 1.0, duration: 1.2 }}
-      >
-        {quarterName}
-      </motion.h2>
-      
-      {/* Fun fact - typewriter style */}
-      <motion.p 
-        className="text-[#F4D47C] text-xl mb-8 text-center font-medium"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.8, duration: 0.6 }}
-      >
-        {randomFact}
-      </motion.p>
-      
-      {/* Stats - slide in from sides */}
-      <motion.div 
-        className="flex gap-8 mb-8"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2.2 }}
-      >
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8 text-[#FDF6E3]">
+        {/* Large 3D seasonal image - rotate + scale in */}
+        <motion.img 
+          src={info.emoji} 
+          alt={quarter} 
+          className="w-32 h-32 mb-4 object-contain mx-auto"
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: "spring", stiffness: 150, damping: 12, duration: 1.2 }}
+        />
+        
+        {/* Quarter badge - slide in from top */}
         <motion.div 
-          className="text-center"
-          initial={{ x: -50, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ delay: 2.4, type: "spring", duration: 0.6 }}
+          className="bg-[#FF5B04] text-white px-6 py-2 rounded-full font-bold mb-4 shadow-lg shadow-[#FF5B04]/30"
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5, type: "spring", duration: 0.6 }}
         >
-          <AnimatedCounter value={count} className="text-[#FF5B04] text-5xl font-bold" />
-          <div className="text-[#D3DBDD] text-sm">
-            {count === 1 ? 'Place' : 'Places'}
-          </div>
+          {quarter}
         </motion.div>
         
-        {photoCount > 0 && (
+        {/* Subtitle */}
+        <motion.p 
+          className="text-[#D3DBDD] text-lg mb-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8, duration: 0.5 }}
+        >
+          {info.subtitle}
+        </motion.p>
+        
+        {/* Title - character reveal effect */}
+        <motion.h2 
+          className="text-4xl font-bold text-[#FDF6E3] mb-3 text-center"
+          initial={{ opacity: 0, letterSpacing: "0.5em" }}
+          animate={{ opacity: 1, letterSpacing: "0em" }}
+          transition={{ delay: 1.0, duration: 1.2 }}
+        >
+          {quarterName}
+        </motion.h2>
+        
+        {/* Fun fact - typewriter style */}
+        <motion.p 
+          className="text-[#F4D47C] text-xl mb-8 text-center font-medium"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.8, duration: 0.6 }}
+        >
+          {randomFact}
+        </motion.p>
+        
+        {/* Stats with count-up animation */}
+        <div className="flex gap-12 mb-8">
           <motion.div 
             className="text-center"
-            initial={{ x: 50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 2.6, type: "spring", duration: 0.6 }}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 2.0, type: "spring", duration: 0.6 }}
           >
-            <AnimatedCounter value={photoCount} className="text-[#2563EB] text-5xl font-bold" />
-            <div className="text-[#D3DBDD] text-sm">
-              {photoCount === 1 ? 'Memory' : 'Memories'}
+            <div className="text-[#FF5B04] text-6xl font-bold mb-2">
+              {placesCount}
+            </div>
+            <div className="text-[#D3DBDD] text-lg">
+              {count === 1 ? 'Place' : 'Places'}
             </div>
           </motion.div>
-        )}
-      </motion.div>
-      
-      {/* Destination chips - wave cascade */}
-      <motion.div 
-        className="flex flex-wrap gap-3 justify-center max-w-2xl"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-      >
-        {destinations.map((dest, idx) => (
-          <motion.div
-            key={dest.id}
-            className="bg-[#075056] border-2 border-[#F4D47C] px-4 py-2 rounded-full text-[#FDF6E3] flex items-center gap-2"
-            variants={popIn}
-            transition={{ delay: 3.0 + idx * 0.12 }}
-            whileHover={{ scale: 1.1 }}
-          >
-            <img src="/images/stamp.webp" alt="Pin" className="w-4 h-4 object-contain" />
-            <span>
-              {dest.type === 'city' 
-                ? `${dest.name}, ${dest.country}`
-                : dest.name
-              }
-            </span>
-            {dest.images.length > 0 && (
-              <span className="text-[#F4D47C] text-xs flex items-center gap-1">({dest.images.length}<img src="/images/camera.webp" alt="Photos" className="w-3 h-3 object-contain" />)</span>
-            )}
-          </motion.div>
-        ))}
-      </motion.div>
+          
+          {photoCount > 0 && (
+            <motion.div 
+              className="text-center"
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 2.2, type: "spring", duration: 0.6 }}
+            >
+              <div className="text-[#2563EB] text-6xl font-bold mb-2">
+                {memoriesCount}
+              </div>
+              <div className="text-[#D3DBDD] text-lg">
+                {photoCount === 1 ? 'Memory' : 'Memories'}
+              </div>
+            </motion.div>
+          )}
+        </div>
+        
+        {/* Destination pills - new style with number circle */}
+        <div className="flex flex-wrap gap-3 justify-center max-w-2xl px-4">
+          {destinations.map((dest, idx) => (
+            <motion.div
+              key={dest.id}
+              className="bg-[#075056] rounded-full px-5 py-3 flex items-center gap-3"
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 3.0 + (idx * 0.12), duration: 0.4, type: "spring" }}
+              whileHover={{ scale: 1.05 }}
+            >
+              {/* Number circle inside pill */}
+              <div className="w-8 h-8 rounded-full bg-[#FF5B04] flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-sm font-bold">
+                  {dest.images.length}
+                </span>
+              </div>
+              
+              {/* Location text */}
+              <span className="text-[#FDF6E3] font-medium">
+                {dest.type === 'city' 
+                  ? `${dest.name}, ${dest.country}`
+                  : dest.name
+                }
+              </span>
+            </motion.div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
