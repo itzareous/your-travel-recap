@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TravelRecapData, TravelDestination, getDestinationDisplayName } from "./types";
 import StampCard from "./StampCard";
-import { ArrowLeft, Download, Plane, MapPin, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { ArrowLeft, Download, Plane, MapPin, ChevronLeft, ChevronRight, Calendar, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import html2canvas from "html2canvas";
 import { 
@@ -771,12 +771,12 @@ function QuarterIntroSlide({ quarter, quarterName, count, destinations }: { quar
           {info.subtitle}
         </motion.p>
         
-        {/* Title - character reveal effect */}
+        {/* Title - fade + slide up */}
         <motion.h2 
           className="text-4xl font-bold text-[#FDF6E3] mb-3 text-center"
-          initial={{ opacity: 0, letterSpacing: "0.5em" }}
-          animate={{ opacity: 1, letterSpacing: "0em" }}
-          transition={{ delay: 1.0, duration: 1.2 }}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0, duration: 0.6, ease: "easeOut" }}
         >
           {quarterName}
         </motion.h2>
@@ -871,13 +871,18 @@ function DestinationSlide({ destination, quarter }: { destination: TravelDestina
   };
   const monthName = getMonthName();
   
-  // Cycle through images if multiple
+  // Cycle through images if multiple - coordinate with slide duration
   useEffect(() => {
     if (images.length <= 1) return;
     
+    // Calculate time per image: divide total slide duration by number of images
+    const imageCount = images.length;
+    const totalDuration = 8000 + (imageCount - 1) * 4000; // Same formula as slide duration
+    const timePerImage = totalDuration / imageCount;
+    
     const interval = setInterval(() => {
-      setCurrentImageIndex(prev => (prev + 1) % images.length);
-    }, 1500);
+      setCurrentImageIndex(prev => (prev + 1) % imageCount);
+    }, timePerImage);
     
     return () => clearInterval(interval);
   }, [images.length]);
@@ -893,20 +898,17 @@ function DestinationSlide({ destination, quarter }: { destination: TravelDestina
     <div className="absolute inset-0 bg-black flex flex-col items-center justify-center overflow-hidden">
       {images.length > 0 ? (
         <div className="relative w-full h-full">
-          {/* Full-screen image with Ken Burns zoom effect */}
+          {/* Full-screen image with crossfade */}
           <AnimatePresence mode="wait">
             <motion.img 
               key={currentImageIndex}
               src={images[currentImageIndex]} 
               alt={displayName}
               className="w-full h-full object-cover"
-              initial={{ opacity: 0, scale: 1.1 }}
-              animate={{ opacity: 1, scale: 1.05 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ 
-                opacity: { duration: 0.5 },
-                scale: { duration: 8, ease: "linear" }
-              }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
             />
           </AnimatePresence>
           
@@ -948,12 +950,12 @@ function DestinationSlide({ destination, quarter }: { destination: TravelDestina
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.6 }}
           >
-            {/* Location name with letter spacing animation */}
+            {/* Location name - fade + slide up */}
             <motion.h2 
               className="text-white text-4xl font-bold mb-2"
-              initial={{ opacity: 0, letterSpacing: "0.3em" }}
-              animate={{ opacity: 1, letterSpacing: "0em" }}
-              transition={{ delay: 0.5, duration: 0.8 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
             >
               {destination.name}
             </motion.h2>
@@ -962,9 +964,9 @@ function DestinationSlide({ destination, quarter }: { destination: TravelDestina
             {destination.type === 'city' && (
               <motion.p 
                 className="text-white/80 text-xl mb-4"
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
+                transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
               >
                 {destination.country}
               </motion.p>
@@ -973,9 +975,9 @@ function DestinationSlide({ destination, quarter }: { destination: TravelDestina
             {/* Fun message with accent bar */}
             <motion.div 
               className="flex items-center gap-3 mb-3"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.9 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
             >
               <div className="bg-[#FF5B04] w-2 h-8 rounded-full"></div>
               <p className="text-white/90 text-lg font-medium">{locationMessage}</p>
@@ -985,9 +987,9 @@ function DestinationSlide({ destination, quarter }: { destination: TravelDestina
             {images.length >= 5 && (
               <motion.p 
                 className="text-[#F4D47C] text-sm italic mt-2"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.2 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" }}
               >
                 This place clearly made an impression! 🌟
               </motion.p>
@@ -995,9 +997,9 @@ function DestinationSlide({ destination, quarter }: { destination: TravelDestina
             {images.length >= 10 && (
               <motion.p 
                 className="text-[#FF5B04] text-sm font-bold mt-1"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.4 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.4, ease: "easeOut" }}
               >
                 <span className="flex items-center gap-1">Top destination of the year! <img src="/images/trophy.webp" alt="Trophy" className="w-4 h-4 inline object-contain" /></span>
               </motion.p>
@@ -1245,33 +1247,33 @@ function TopSpotSlide({ data }: { data: TravelRecapData }) {
   
   return (
     <div className="absolute inset-0 bg-gradient-to-br from-[#FF5B04] to-[#E54F03] flex flex-col items-center justify-center p-8 overflow-hidden">
-      {/* Trophy icon - drop from top + bounce + shine */}
+      {/* Trophy icon - fade + slide down */}
       <motion.img 
         src="/images/trophy.webp" 
         alt="Trophy" 
         className="w-24 h-24 mb-6 object-contain"
-        initial={{ y: -200, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 200, damping: 15 }}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
       />
       
-      {/* Header - slide in from left */}
+      {/* Header - fade + slide up */}
       <motion.h2 
         className="text-white text-2xl font-bold mb-12 flex items-center gap-2"
-        initial={{ x: -100, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{ delay: 0.3, type: "spring" }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
       >
         <img src="/images/trophy.webp" alt="Trophy" className="w-8 h-8 object-contain" />
         Your Top Spot
       </motion.h2>
       
-      {/* Location name - split reveal with glow */}
+      {/* Location name - fade + slide up, smaller size */}
       <motion.h1 
-        className="text-white text-6xl font-bold text-center mb-6"
-        initial={{ opacity: 0, letterSpacing: "0.5em", textShadow: "0 0 0px rgba(255,255,255,0)" }}
-        animate={{ opacity: 1, letterSpacing: "0em", textShadow: "0 0 30px rgba(255,255,255,0.5)" }}
-        transition={{ delay: 0.6, duration: 1 }}
+        className="text-white text-5xl font-bold text-center mb-6 leading-tight"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
       >
         {mostVisited.name}
       </motion.h1>
@@ -1280,29 +1282,29 @@ function TopSpotSlide({ data }: { data: TravelRecapData }) {
       {mostVisited.type === 'city' && (
         <motion.p 
           className="text-white/90 text-3xl mb-12"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1 }}
+          transition={{ duration: 0.4, delay: 0.6, ease: "easeOut" }}
         >
           {mostVisited.country}
         </motion.p>
       )}
       
-      {/* Stats - typewriter with emoji pop */}
+      {/* Stats - fade + slide up */}
       <motion.p 
         className="text-white text-2xl flex items-center gap-2"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.3 }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.8, ease: "easeOut" }}
       >
         {mostVisited.images.length} photos • You couldn't get enough! 
         <motion.img 
           src="/images/party-popper.webp" 
           alt="Love" 
           className="w-8 h-8 object-contain"
-          initial={{ scale: 0, rotate: -45 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ delay: 1.6, type: "spring", stiffness: 300 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.0, duration: 0.3 }}
         />
       </motion.p>
     </div>
@@ -1511,7 +1513,10 @@ function QuarterBreakdownSlide({ quarterlyData }: { quarterlyData: QuarterlyData
 function StampCollectionSlide({ data, onShare, onRestart }: { data: TravelRecapData; onShare: () => void; onRestart: () => void }) {
   return (
     <div className="absolute inset-0 bg-[#0B0101] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-      <div className="p-8 pb-32">
+      {/* Bottom-right glow */}
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-[#FF5B04]/30 via-[#2563EB]/20 to-transparent rounded-full blur-3xl" />
+      
+      <div className="relative z-10 p-8 pb-32 pt-24">
         {/* Header - slide in */}
         <motion.h2 
           className="text-[#FDF6E3] text-3xl font-bold mb-6 text-center flex items-center justify-center gap-2"
@@ -1558,7 +1563,7 @@ function StampCollectionSlide({ data, onShare, onRestart }: { data: TravelRecapD
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.5 + data.destinations.length * 0.1 }}
             >
-              <p className="text-[#FDF6E3] text-xl mb-2 flex items-center justify-center gap-2">
+              <p className="text-[#FDF6E3] text-xl flex items-center justify-center gap-2">
                 What a year, @{data.profile.username}! 
                 <motion.img 
                   src="/images/party-popper.webp" 
@@ -1567,17 +1572,6 @@ function StampCollectionSlide({ data, onShare, onRestart }: { data: TravelRecapD
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.8 + data.destinations.length * 0.1, type: "spring" }}
-                />
-              </p>
-              <p className="text-[#D3DBDD] flex items-center justify-center gap-1">
-                Can't wait to see where 2026 takes you! 
-                <motion.img 
-                  src="/images/airplane.webp" 
-                  alt="Plane" 
-                  className="w-5 h-5 object-contain"
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 1 + data.destinations.length * 0.1 }}
                 />
               </p>
             </motion.div>
@@ -1629,44 +1623,56 @@ function StampCollectionSlide({ data, onShare, onRestart }: { data: TravelRecapD
         )}
       </div>
       
-      {/* Fixed bottom buttons - staggered scale in */}
+      {/* Fixed bottom buttons - horizontal layout */}
       <motion.div 
-        className="fixed bottom-0 left-0 right-0 bg-[#233038] p-6 space-y-3"
+        className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#233038] to-transparent"
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ delay: 0.8, type: "spring" }}
       >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 1 }}
-          whileHover={{ scale: data.destinations.length > 0 ? 1.02 : 1 }}
-          whileTap={{ scale: data.destinations.length > 0 ? 0.98 : 1 }}
-        >
-          <Button 
-            onClick={onShare}
-            disabled={data.destinations.length === 0}
-            className="w-full h-14 bg-[#FF5B04] hover:bg-[#E54F03] rounded-xl font-bold text-lg disabled:bg-[#233038] disabled:text-[#D3DBDD] transition-all"
+        <div className="flex items-center justify-center gap-4">
+          <motion.div
+            className="flex-1"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1, duration: 0.4, ease: "easeOut" }}
           >
-            <Download className="w-6 h-6 mr-2" />
-            Download My Recap
-          </Button>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 1.1 }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <Button 
-            onClick={onRestart}
-            variant="outline"
-            className="w-full h-14 border-2 border-[#D3DBDD] text-[#D3DBDD] hover:border-[#FF5B04] hover:text-[#FF5B04] bg-transparent rounded-xl font-semibold text-lg transition-all"
+            <Button 
+              onClick={onRestart}
+              className="w-full h-14 bg-[#FF5B04] hover:bg-[#E64F00] rounded-xl font-bold text-lg text-white transition-colors"
+            >
+              Create Another
+            </Button>
+          </motion.div>
+          
+          <motion.button
+            onClick={async () => {
+              const shareData = {
+                title: 'Stamped Recap',
+                text: 'Create your 2025 travel recap with Stamped Recap!',
+                url: window.location.origin
+              };
+              
+              try {
+                if (navigator.share) {
+                  await navigator.share(shareData);
+                } else {
+                  await navigator.clipboard.writeText(window.location.origin);
+                  alert('Link copied to clipboard!');
+                }
+              } catch (err) {
+                console.error('Share failed:', err);
+              }
+            }}
+            className="w-16 h-14 bg-[#233038] hover:bg-[#2C3E47] border-2 border-[#D3DBDD] rounded-xl flex items-center justify-center transition-colors"
+            title="Share Stamped Recap"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.1, duration: 0.4, ease: "easeOut" }}
           >
-            Create Another
-          </Button>
-        </motion.div>
+            <Share2 className="w-6 h-6 text-[#D3DBDD]" />
+          </motion.button>
+        </div>
       </motion.div>
     </div>
   );
