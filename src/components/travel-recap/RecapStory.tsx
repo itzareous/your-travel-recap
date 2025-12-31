@@ -391,7 +391,7 @@ export default function RecapStory({ data, onBack, onRestart }: RecapStoryProps)
           <QuarterBreakdownSlide quarterlyData={quarterlyDestinations} />
         )}
         {currentSlide.type === 'stamp-collection' && (
-          <StampCollectionSlide data={data} onShare={handleShare} onRestart={onRestart} />
+          <StampCollectionSlide data={data} onShare={handleShare} onRestart={onRestart} goToPrevious={goToPrev} />
         )}
       </div>
 
@@ -1510,13 +1510,42 @@ function QuarterBreakdownSlide({ quarterlyData }: { quarterlyData: QuarterlyData
 }
 
 // Summary Slide 5: Stamp Collection + Download
-function StampCollectionSlide({ data, onShare, onRestart }: { data: TravelRecapData; onShare: () => void; onRestart: () => void }) {
+function StampCollectionSlide({ data, onShare, onRestart, goToPrevious }: { data: TravelRecapData; onShare: () => void; onRestart: () => void; goToPrevious: () => void }) {
   return (
-    <div className="absolute inset-0 bg-[#0B0101] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-      {/* Bottom-right glow */}
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-[#FF5B04]/30 via-[#2563EB]/20 to-transparent rounded-full blur-3xl" />
+    <div className="relative w-full h-screen bg-[#0B0101] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+      {/* Bottom-right glow - background layer */}
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-[#FF5B04]/30 via-[#2563EB]/20 to-transparent rounded-full blur-3xl -z-10" />
       
-      <div className="relative z-10 p-8 pb-32 pt-24">
+      {/* HEADER - Fixed at top with high z-index */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-[#0B0101] via-[#0B0101]/95 to-transparent">
+        {/* Header content */}
+        <div className="flex items-center justify-between p-6">
+          {/* Back button (left) */}
+          <button 
+            onClick={goToPrevious}
+            className="w-12 h-12 bg-[#233038] hover:bg-[#2C3E47] rounded-full flex items-center justify-center transition-colors"
+          >
+            <ArrowLeft className="w-6 h-6 text-[#D3DBDD]" />
+          </button>
+          
+          {/* Username badge (center) */}
+          <div className="bg-[#233038] px-6 py-3 rounded-full">
+            <span className="text-white font-medium">@{data.profile.username}</span>
+          </div>
+          
+          {/* Download button (right) */}
+          <button 
+            onClick={onShare}
+            className="w-12 h-12 bg-[#233038] hover:bg-[#2C3E47] rounded-full flex items-center justify-center transition-colors"
+          >
+            <Download className="w-6 h-6 text-[#D3DBDD]" />
+          </button>
+        </div>
+      </div>
+      
+      {/* SCROLLABLE CONTENT - below header */}
+      <div className="absolute inset-0 z-10 overflow-y-auto pt-32 pb-12">
+        <div className="flex flex-col items-center px-6">
         {/* Header - slide in */}
         <motion.h2 
           className="text-[#FDF6E3] text-3xl font-bold mb-6 text-center flex items-center justify-center gap-2"
@@ -1621,11 +1650,18 @@ function StampCollectionSlide({ data, onShare, onRestart }: { data: TravelRecapD
             </motion.p>
           </motion.div>
         )}
+        </div>
       </div>
       
-      {/* Fixed bottom buttons - horizontal layout */}
+      {/* TOP GRADIENT OVERLAY - z-40 (covers scrolling content) */}
+      <div className="fixed top-0 left-0 right-0 h-36 bg-gradient-to-b from-[#0B0101] via-[#0B0101]/95 to-transparent pointer-events-none z-40" />
+      
+      {/* BOTTOM GRADIENT OVERLAY - z-40 (covers scrolling content) */}
+      <div className="fixed bottom-0 left-0 right-0 h-56 bg-gradient-to-t from-[#0B0101] via-[#0B0101]/95 to-transparent pointer-events-none z-40" />
+      
+      {/* FOOTER BUTTONS - z-50 (highest, always on top) */}
       <motion.div 
-        className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#233038] to-transparent"
+        className="fixed bottom-0 left-0 right-0 p-6 z-50"
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ delay: 0.8, type: "spring" }}
